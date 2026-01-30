@@ -1,0 +1,27 @@
+# Build output
+build/
+bin/
+out/
+
+# Gradle
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+.project
+.classpath
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Simulation
+simgui*.json
+
+# Logs
+*.log
