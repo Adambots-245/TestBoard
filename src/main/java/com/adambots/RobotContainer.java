@@ -5,6 +5,8 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 
+import com.adambots.commands.ShootCommand;
+import com.adambots.subsystems.HopperSubsystem;
 import com.adambots.subsystems.ShooterSubsystem;
 
 /**
@@ -15,25 +17,28 @@ import com.adambots.subsystems.ShooterSubsystem;
  *
  * To add a new subsystem:
  * 1. Create the subsystem class in the subsystems package
- * 2. Instantiate it here
- * 3. Create a Shuffleboard tab and add commands in setupDashboard()
+ * 2. Create motors in RobotMap and pass them to the subsystem constructor
+ * 3. Instantiate the subsystem here
+ * 4. Create a Shuffleboard tab and add commands in setupDashboard()
  */
 public class RobotContainer {
 
     // ==================== Subsystems ====================
     private final ShooterSubsystem shooter;
+    private final HopperSubsystem hopper;
 
     // Add your subsystems here:
     // private final IntakeSubsystem intake;
     // private final ArmSubsystem arm;
 
     public RobotContainer() {
-        // Initialize subsystems
-        shooter = new ShooterSubsystem();
+        // Initialize subsystems with motors from RobotMap
+        shooter = new ShooterSubsystem(RobotMap.shooterLeftMotor, RobotMap.shooterRightMotor);
+        hopper = new HopperSubsystem(RobotMap.uptakeMotor);
 
         // Add your subsystem initialization here:
-        // intake = new IntakeSubsystem();
-        // arm = new ArmSubsystem();
+        // intake = new IntakeSubsystem(RobotMap.intakeMotor);
+        // arm = new ArmSubsystem(RobotMap.armLeftMotor, RobotMap.armRightMotor);
 
         // Setup Shuffleboard tabs with commands
         setupDashboard();
@@ -55,17 +60,35 @@ public class RobotContainer {
         shooterTab.add("Reverse Shooter", shooter.reverseShooterCommand())
             .withPosition(4, 0).withSize(2, 1);
 
-        // Uptake commands (row 1)
-        shooterTab.add("Run Uptake", shooter.runUptakeCommand())
-            .withPosition(0, 1).withSize(2, 1);
-        shooterTab.add("Stop Uptake", shooter.stopUptakeCommand())
-            .withPosition(2, 1).withSize(2, 1);
-        shooterTab.add("Reverse Uptake", shooter.reverseUptakeCommand())
-            .withPosition(4, 1).withSize(2, 1);
-
-        // Subsystem status (row 2)
+        // Subsystem status (row 1)
         shooterTab.add("Shooter Subsystem", shooter)
-            .withPosition(0, 2).withSize(3, 2);
+            .withPosition(0, 1).withSize(3, 2);
+
+        // ==================== Hopper Tab ====================
+        ShuffleboardTab hopperTab = Shuffleboard.getTab("Hopper");
+
+        // Uptake commands (row 0)
+        hopperTab.add("Run Uptake", hopper.runUptakeCommand())
+            .withPosition(0, 0).withSize(2, 1);
+        hopperTab.add("Stop Uptake", hopper.stopUptakeCommand())
+            .withPosition(2, 0).withSize(2, 1);
+        hopperTab.add("Reverse Uptake", hopper.reverseUptakeCommand())
+            .withPosition(4, 0).withSize(2, 1);
+
+        // Subsystem status (row 1)
+        hopperTab.add("Hopper Subsystem", hopper)
+            .withPosition(0, 1).withSize(3, 2);
+
+        // ==================== Combo Tab ====================
+        ShuffleboardTab comboTab = Shuffleboard.getTab("Combo");
+
+        // Combined commands (row 0)
+        comboTab.add("Shoot With Hopper", ShootCommand.shootWithHopper(shooter, hopper))
+            .withPosition(0, 0).withSize(2, 1);
+        comboTab.add("Stop All", ShootCommand.stopAll(shooter, hopper))
+            .withPosition(2, 0).withSize(2, 1);
+        comboTab.add("Reverse All", ShootCommand.reverseAll(shooter, hopper))
+            .withPosition(4, 0).withSize(2, 1);
 
         // ==================== Add Your Subsystem Tabs Here ====================
         // Example:

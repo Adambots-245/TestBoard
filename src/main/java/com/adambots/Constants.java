@@ -12,17 +12,24 @@ import edu.wpi.first.units.measure.*;
 public final class Constants {
 
     /**
-     * Shooter prototype constants.
-     *
-     * Two Kraken X60 motors for shooter wheels + one Kraken X44 for uptake.
+     * Shooter constants for shooter wheel motors.
      */
     public static final class ShooterConstants {
-        // Motor speeds (duty cycle -1.0 to 1.0)
+        // Motor speed (duty cycle -1.0 to 1.0)
         public static final double kShooterSpeed = 0.75;
+
+        // Current limit
+        public static final Current kShooterCurrentLimit = Amps.of(60);
+    }
+
+    /**
+     * Hopper constants for uptake motor.
+     */
+    public static final class HopperConstants {
+        // Motor speed (duty cycle -1.0 to 1.0)
         public static final double kUptakeSpeed = 0.5;
 
-        // Current limits
-        public static final Current kShooterCurrentLimit = Amps.of(60);
+        // Current limit
         public static final Current kUptakeCurrentLimit = Amps.of(40);
     }
 
