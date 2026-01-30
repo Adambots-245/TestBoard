@@ -1,6 +1,7 @@
 package com.adambots;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 
@@ -10,13 +11,12 @@ import com.adambots.subsystems.ShooterSubsystem;
  * RobotContainer for TestBoard - a subsystem testing platform.
  *
  * This is designed for testing prototype mechanisms using Shuffleboard.
- * All commands are exposed on SmartDashboard so you can run them from
- * Shuffleboard without needing a controller.
+ * Each subsystem gets its own tab with commands pre-arranged.
  *
  * To add a new subsystem:
  * 1. Create the subsystem class in the subsystems package
  * 2. Instantiate it here
- * 3. Add its commands to SmartDashboard in setupDashboard()
+ * 3. Create a Shuffleboard tab and add commands in setupDashboard()
  */
 public class RobotContainer {
 
@@ -35,33 +35,47 @@ public class RobotContainer {
         // intake = new IntakeSubsystem();
         // arm = new ArmSubsystem();
 
-        // Setup SmartDashboard commands for Shuffleboard testing
+        // Setup Shuffleboard tabs with commands
         setupDashboard();
     }
 
     /**
-     * Add commands to SmartDashboard for Shuffleboard testing.
-     *
-     * Commands will appear under their group name (e.g., "Shooter/Run Shooter").
-     * You can drag these onto your Shuffleboard layout and click to run them.
+     * Create Shuffleboard tabs for each subsystem with commands pre-arranged.
+     * Tabs persist between runs - just rearrange widgets as needed.
      */
     private void setupDashboard() {
-        // ==================== Shooter Commands ====================
-        SmartDashboard.putData("Shooter/Run Shooter", shooter.runShooterCommand());
-        SmartDashboard.putData("Shooter/Stop Shooter", shooter.stopShooterCommand());
-        SmartDashboard.putData("Shooter/Reverse Shooter", shooter.reverseShooterCommand());
-        SmartDashboard.putData("Shooter/Run Uptake", shooter.runUptakeCommand());
-        SmartDashboard.putData("Shooter/Stop Uptake", shooter.stopUptakeCommand());
-        SmartDashboard.putData("Shooter/Reverse Uptake", shooter.reverseUptakeCommand());
+        // ==================== Shooter Tab ====================
+        ShuffleboardTab shooterTab = Shuffleboard.getTab("Shooter");
 
-        // Add the subsystem itself for Shuffleboard to show default command status
-        SmartDashboard.putData("Shooter", shooter);
+        // Shooter wheel commands (row 0)
+        shooterTab.add("Run Shooter", shooter.runShooterCommand())
+            .withPosition(0, 0).withSize(2, 1);
+        shooterTab.add("Stop Shooter", shooter.stopShooterCommand())
+            .withPosition(2, 0).withSize(2, 1);
+        shooterTab.add("Reverse Shooter", shooter.reverseShooterCommand())
+            .withPosition(4, 0).withSize(2, 1);
 
-        // ==================== Add Your Subsystem Commands Here ====================
+        // Uptake commands (row 1)
+        shooterTab.add("Run Uptake", shooter.runUptakeCommand())
+            .withPosition(0, 1).withSize(2, 1);
+        shooterTab.add("Stop Uptake", shooter.stopUptakeCommand())
+            .withPosition(2, 1).withSize(2, 1);
+        shooterTab.add("Reverse Uptake", shooter.reverseUptakeCommand())
+            .withPosition(4, 1).withSize(2, 1);
+
+        // Subsystem status (row 2)
+        shooterTab.add("Shooter Subsystem", shooter)
+            .withPosition(0, 2).withSize(3, 2);
+
+        // ==================== Add Your Subsystem Tabs Here ====================
         // Example:
-        // SmartDashboard.putData("Intake/Run Intake", intake.runIntakeCommand());
-        // SmartDashboard.putData("Intake/Stop Intake", intake.stopIntakeCommand());
-        // SmartDashboard.putData("Intake", intake);
+        // ShuffleboardTab intakeTab = Shuffleboard.getTab("Intake");
+        // intakeTab.add("Run Intake", intake.runIntakeCommand())
+        //     .withPosition(0, 0).withSize(2, 1);
+        // intakeTab.add("Stop Intake", intake.stopIntakeCommand())
+        //     .withPosition(2, 0).withSize(2, 1);
+        // intakeTab.add("Intake Subsystem", intake)
+        //     .withPosition(0, 1).withSize(3, 2);
     }
 
     /**
