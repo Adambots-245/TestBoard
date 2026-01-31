@@ -7,19 +7,22 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 /**
- * Hopper subsystem with uptake motor for feeding game pieces.
+ * Hopper subsystem with uptake and carousel motors for feeding game pieces.
  */
 public class HopperSubsystem extends SubsystemBase {
 
     private final BaseMotor uptakeMotor;
+    private final BaseMotor carouselMotor;
 
-    public HopperSubsystem(BaseMotor uptakeMotor) {
+    public HopperSubsystem(BaseMotor uptakeMotor, BaseMotor carouselMotor) {
         this.uptakeMotor = uptakeMotor;
-        configureMotor();
+        this.carouselMotor = carouselMotor;
+        configureMotors();
     }
 
-    private void configureMotor() {
+    private void configureMotors() {
         uptakeMotor.setBrakeMode(true);
+        carouselMotor.setBrakeMode(true);
     }
 
     /**
@@ -41,6 +44,27 @@ public class HopperSubsystem extends SubsystemBase {
      */
     public void stopUptake() {
         uptakeMotor.set(0);
+    }
+
+    /**
+     * Run the carousel at the configured speed.
+     */
+    public void runCarousel() {
+        carouselMotor.set(HopperConstants.kCarouselSpeed);
+    }
+
+    /**
+     * Run the carousel in reverse.
+     */
+    public void reverseCarousel() {
+        carouselMotor.set(-HopperConstants.kCarouselSpeed);
+    }
+
+    /**
+     * Stop the carousel motor.
+     */
+    public void stopCarousel() {
+        carouselMotor.set(0);
     }
 
     // ==================== Command Factory Methods ====================
@@ -67,6 +91,58 @@ public class HopperSubsystem extends SubsystemBase {
     public Command stopUptakeCommand() {
         return runOnce(this::stopUptake)
             .withName("Stop Uptake");
+    }
+
+    /**
+     * Command to run the carousel while held.
+     */
+    public Command runCarouselCommand() {
+        return runEnd(this::runCarousel, this::stopCarousel)
+            .withName("Run Carousel");
+    }
+
+    /**
+     * Command to reverse the carousel while held.
+     */
+    public Command reverseCarouselCommand() {
+        return runEnd(this::reverseCarousel, this::stopCarousel)
+            .withName("Reverse Carousel");
+    }
+
+    /**
+     * Command to stop the carousel (instant).
+     */
+    public Command stopCarouselCommand() {
+        return runOnce(this::stopCarousel)
+            .withName("Stop Carousel");
+    }
+
+    /**
+     * Command to run both carousel and uptake together while held.
+     */
+    public Command runHopperCommand() {
+        return runEnd(
+            () -> { runCarousel(); runUptake(); },
+            () -> { stopCarousel(); stopUptake(); }
+        ).withName("Run Hopper");
+    }
+
+    /**
+     * Command to reverse both carousel and uptake together while held.
+     */
+    public Command reverseHopperCommand() {
+        return runEnd(
+            () -> { reverseCarousel(); reverseUptake(); },
+            () -> { stopCarousel(); stopUptake(); }
+        ).withName("Reverse Hopper");
+    }
+
+    /**
+     * Command to stop both carousel and uptake (instant).
+     */
+    public Command stopHopperCommand() {
+        return runOnce(() -> { stopCarousel(); stopUptake(); })
+            .withName("Stop Hopper");
     }
 
     @Override

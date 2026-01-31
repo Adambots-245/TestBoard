@@ -34,7 +34,7 @@ public class RobotContainer {
     public RobotContainer() {
         // Initialize subsystems with motors from RobotMap
         shooter = new ShooterSubsystem(RobotMap.shooterLeftMotor, RobotMap.shooterRightMotor);
-        hopper = new HopperSubsystem(RobotMap.uptakeMotor);
+        hopper = new HopperSubsystem(RobotMap.uptakeMotor, RobotMap.carouselMotor);
 
         // Add your subsystem initialization here:
         // intake = new IntakeSubsystem(RobotMap.intakeMotor);
@@ -75,9 +75,25 @@ public class RobotContainer {
         hopperTab.add("Reverse Uptake", hopper.reverseUptakeCommand())
             .withPosition(4, 0).withSize(2, 1);
 
-        // Subsystem status (row 1)
+        // Carousel commands (row 1)
+        hopperTab.add("Run Carousel", hopper.runCarouselCommand())
+            .withPosition(0, 1).withSize(2, 1);
+        hopperTab.add("Stop Carousel", hopper.stopCarouselCommand())
+            .withPosition(2, 1).withSize(2, 1);
+        hopperTab.add("Reverse Carousel", hopper.reverseCarouselCommand())
+            .withPosition(4, 1).withSize(2, 1);
+
+        // Combined hopper commands (row 2)
+        hopperTab.add("Run Hopper", hopper.runHopperCommand())
+            .withPosition(0, 2).withSize(2, 1);
+        hopperTab.add("Stop Hopper", hopper.stopHopperCommand())
+            .withPosition(2, 2).withSize(2, 1);
+        hopperTab.add("Reverse Hopper", hopper.reverseHopperCommand())
+            .withPosition(4, 2).withSize(2, 1);
+
+        // Subsystem status (row 3)
         hopperTab.add("Hopper Subsystem", hopper)
-            .withPosition(0, 1).withSize(3, 2);
+            .withPosition(0, 3).withSize(3, 2);
 
         // ==================== Combo Tab ====================
         ShuffleboardTab comboTab = Shuffleboard.getTab("Combo");

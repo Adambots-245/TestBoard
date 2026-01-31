@@ -23,14 +23,16 @@ public final class Constants {
     }
 
     /**
-     * Hopper constants for uptake motor.
+     * Hopper constants for uptake and carousel motors.
      */
     public static final class HopperConstants {
         // Motor speed (duty cycle -1.0 to 1.0)
         public static final double kUptakeSpeed = 0.5;
+        public static final double kCarouselSpeed = 0.3;  // Slower to feed ball to uptake
 
         // Current limit
         public static final Current kUptakeCurrentLimit = Amps.of(40);
+        public static final Current kCarouselCurrentLimit = Amps.of(40);
     }
 
     // ==================== Add Your Constants Here ====================

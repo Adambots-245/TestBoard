@@ -12,34 +12,34 @@ import edu.wpi.first.wpilibj2.command.Commands;
 public class ShootCommand {
 
     /**
-     * Command to run both shooter and hopper together while held.
-     * Both stop when the command ends.
+     * Command to run shooter, uptake, and carousel together while held.
+     * All stop when the command ends.
      */
     public static Command shootWithHopper(ShooterSubsystem shooter, HopperSubsystem hopper) {
         return Commands.parallel(
             shooter.runShooterCommand(),
-            hopper.runUptakeCommand()
+            hopper.runHopperCommand()
         ).withName("Shoot With Hopper");
     }
 
     /**
-     * Command to reverse both shooter and hopper together while held.
+     * Command to reverse shooter, uptake, and carousel together while held.
      * Useful for clearing jams.
      */
     public static Command reverseAll(ShooterSubsystem shooter, HopperSubsystem hopper) {
         return Commands.parallel(
             shooter.reverseShooterCommand(),
-            hopper.reverseUptakeCommand()
+            hopper.reverseHopperCommand()
         ).withName("Reverse All");
     }
 
     /**
-     * Command to stop both shooter and hopper (instant).
+     * Command to stop shooter, uptake, and carousel (instant).
      */
     public static Command stopAll(ShooterSubsystem shooter, HopperSubsystem hopper) {
         return Commands.parallel(
             shooter.stopShooterCommand(),
-            hopper.stopUptakeCommand()
+            hopper.stopHopperCommand()
         ).withName("Stop All");
     }
 }

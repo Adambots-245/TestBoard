@@ -24,6 +24,7 @@ public class RobotMap {
     public static final int kShooterLeftPort = 21;   // Kraken X60
     public static final int kShooterRightPort = 22;  // Kraken X60 (follower)
     public static final int kUptakePort = 20;        // Kraken X44
+    public static final int kCarouselPort = 23;      // Kraken X44
 
     // ==================== Motor Instances ====================
     // Using BaseMotor allows easy swap between motor types (TalonFX, NEO, etc.)
@@ -35,6 +36,9 @@ public class RobotMap {
 
     // Hopper/Uptake motor (Kraken X44)
     public static final BaseMotor uptakeMotor = new TalonFXMotor(kUptakePort, false, 40.0, true);
+
+    // Carousel motor (Kraken X44)
+    public static final BaseMotor carouselMotor = new TalonFXMotor(kCarouselPort, false, 40.0, true);
 
     // ==================== Add Your Motors Here ====================
     // Example:
