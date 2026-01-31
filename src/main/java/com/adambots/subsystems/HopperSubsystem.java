@@ -1,5 +1,7 @@
 package com.adambots.subsystems;
 
+import static edu.wpi.first.units.Units.RPM;
+
 import com.adambots.Constants.HopperConstants;
 import com.adambots.lib.actuators.BaseMotor;
 
@@ -65,6 +67,20 @@ public class HopperSubsystem extends SubsystemBase {
      */
     public void stopCarousel() {
         carouselMotor.set(0);
+    }
+
+    /**
+     * Get the uptake motor RPM.
+     */
+    public double getUptakeRPM() {
+        return uptakeMotor.getVelocity().in(RPM);
+    }
+
+    /**
+     * Get the carousel motor RPM.
+     */
+    public double getCarouselRPM() {
+        return carouselMotor.getVelocity().in(RPM);
     }
 
     // ==================== Command Factory Methods ====================

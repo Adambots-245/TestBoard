@@ -60,9 +60,15 @@ public class RobotContainer {
         shooterTab.add("Reverse Shooter", shooter.reverseShooterCommand())
             .withPosition(4, 0).withSize(2, 1);
 
-        // Subsystem status (row 1)
+        // RPM telemetry (row 1)
+        shooterTab.addNumber("Left RPM", shooter::getLeftRPM)
+            .withPosition(0, 1).withSize(2, 1);
+        shooterTab.addNumber("Right RPM", shooter::getRightRPM)
+            .withPosition(2, 1).withSize(2, 1);
+
+        // Subsystem status (row 2)
         shooterTab.add("Shooter Subsystem", shooter)
-            .withPosition(0, 1).withSize(3, 2);
+            .withPosition(0, 2).withSize(3, 2);
 
         // ==================== Hopper Tab ====================
         ShuffleboardTab hopperTab = Shuffleboard.getTab("Hopper");
@@ -91,9 +97,15 @@ public class RobotContainer {
         hopperTab.add("Reverse Hopper", hopper.reverseHopperCommand())
             .withPosition(4, 2).withSize(2, 1);
 
-        // Subsystem status (row 3)
+        // RPM telemetry (row 3)
+        hopperTab.addNumber("Uptake RPM", hopper::getUptakeRPM)
+            .withPosition(0, 3).withSize(2, 1);
+        hopperTab.addNumber("Carousel RPM", hopper::getCarouselRPM)
+            .withPosition(2, 3).withSize(2, 1);
+
+        // Subsystem status (row 4)
         hopperTab.add("Hopper Subsystem", hopper)
-            .withPosition(0, 3).withSize(3, 2);
+            .withPosition(0, 4).withSize(3, 2);
 
         // ==================== Combo Tab ====================
         ShuffleboardTab comboTab = Shuffleboard.getTab("Combo");

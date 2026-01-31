@@ -1,5 +1,7 @@
 package com.adambots.subsystems;
 
+import static edu.wpi.first.units.Units.RPM;
+
 import com.adambots.Constants.ShooterConstants;
 import com.adambots.RobotMap;
 import com.adambots.lib.actuators.BaseMotor;
@@ -49,6 +51,20 @@ public class ShooterSubsystem extends SubsystemBase {
      */
     public void stopShooter() {
         leftMotor.set(0);
+    }
+
+    /**
+     * Get the left shooter motor RPM.
+     */
+    public double getLeftRPM() {
+        return leftMotor.getVelocity().in(RPM);
+    }
+
+    /**
+     * Get the right shooter motor RPM.
+     */
+    public double getRightRPM() {
+        return rightMotor.getVelocity().in(RPM);
     }
 
     // ==================== Command Factory Methods ====================
