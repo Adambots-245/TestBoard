@@ -28,8 +28,7 @@ public class ShooterSubsystem extends SubsystemBase {
         rightMotor.setBrakeMode(false);
 
         // Right motor follows left motor in opposite direction (for shooter wheels)
-        rightMotor.setInverted(true);
-        rightMotor.setStrictFollower(RobotMap.kShooterLeftPort);
+        rightMotor.setStrictFollower(RobotMap.kShooterLeftPort,true);
     }
 
     /**
