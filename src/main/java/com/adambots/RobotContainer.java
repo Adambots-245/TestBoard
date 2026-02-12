@@ -1,12 +1,11 @@
 package com.adambots;
 
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import static edu.wpi.first.units.Units.*;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 
-import com.adambots.commands.ShootCommand;
-import com.adambots.subsystems.HopperSubsystem;
+import com.adambots.lib.utils.Dash;
 import com.adambots.subsystems.ShooterSubsystem;
 
 /**
@@ -25,20 +24,10 @@ public class RobotContainer {
 
     // ==================== Subsystems ====================
     private final ShooterSubsystem shooter;
-    private final HopperSubsystem hopper;
-
-    // Add your subsystems here:
-    // private final IntakeSubsystem intake;
-    // private final ArmSubsystem arm;
 
     public RobotContainer() {
         // Initialize subsystems with motors from RobotMap
-        shooter = new ShooterSubsystem(RobotMap.shooterLeftMotor, RobotMap.shooterRightMotor);
-        hopper = new HopperSubsystem(RobotMap.uptakeMotor, RobotMap.carouselMotor);
-
-        // Add your subsystem initialization here:
-        // intake = new IntakeSubsystem(RobotMap.intakeMotor);
-        // arm = new ArmSubsystem(RobotMap.armLeftMotor, RobotMap.armRightMotor);
+        shooter = new ShooterSubsystem(RobotMap.shooterLeftMotor, RobotMap.shooterRightMotor, RobotMap.turretMotor);
 
         // Setup Shuffleboard tabs with commands
         setupDashboard();
@@ -49,84 +38,34 @@ public class RobotContainer {
      * Tabs persist between runs - just rearrange widgets as needed.
      */
     private void setupDashboard() {
-        // ==================== Shooter Tab ====================
-        ShuffleboardTab shooterTab = Shuffleboard.getTab("Shooter");
+        // ==================== Shooter Test Tab (via Dash) ====================
+        Dash.useTab("Shooter Test");
+        shooter.setupTunables();  // registers all tunable GenericEntry fields
 
-        // Shooter wheel commands (row 0)
-        shooterTab.add("Run Shooter", shooter.runShooterCommand())
-            .withPosition(0, 0).withSize(2, 1);
-        shooterTab.add("Stop Shooter", shooter.stopShooterCommand())
-            .withPosition(2, 0).withSize(2, 1);
-        shooterTab.add("Reverse Shooter", shooter.reverseShooterCommand())
-            .withPosition(4, 0).withSize(2, 1);
+        // Telemetry (auto-updating)
+        Dash.add("Left RPS", shooter::getLeftRPS);
+        Dash.add("Right RPS", shooter::getRightRPS);
+        Dash.add("Target RPS", shooter::getTargetRPS);
+        Dash.add("Turret Angle", shooter::getTurretAngleDegrees);
+        Dash.add("At Speed", shooter::isAtSpeed);
+        Dash.add("Mode", () -> shooter.isUsingInterpolationMode() ? "TABLE" : "CALCULATOR");
+        Dash.add("Table RPS", () -> shooter.getRPSFromTable(shooter.getTunableDistance()));
+        Dash.add("Calc RPS", () -> shooter.getRPSFromCalculator(shooter.getTunableDistance()));
+        Dash.add("Flywheel Amps", () -> RobotMap.shooterLeftMotor.getCurrentDraw().in(Amps));
+        Dash.add("Turret Amps", () -> RobotMap.turretMotor.getCurrentDraw().in(Amps));
+        Dash.add("Flywheel Temp", () -> RobotMap.shooterLeftMotor.getTemperature());
 
-        // RPM telemetry (row 1)
-        shooterTab.addNumber("Left RPM", shooter::getLeftRPM)
-            .withPosition(0, 1).withSize(2, 1);
-        shooterTab.addNumber("Right RPM", shooter::getRightRPM)
-            .withPosition(2, 1).withSize(2, 1);
-
-        // Subsystem status (row 2)
-        shooterTab.add("Shooter Subsystem", shooter)
-            .withPosition(0, 2).withSize(3, 2);
-
-        // ==================== Hopper Tab ====================
-        ShuffleboardTab hopperTab = Shuffleboard.getTab("Hopper");
-
-        // Uptake commands (row 0)
-        hopperTab.add("Run Uptake", hopper.runUptakeCommand())
-            .withPosition(0, 0).withSize(2, 1);
-        hopperTab.add("Stop Uptake", hopper.stopUptakeCommand())
-            .withPosition(2, 0).withSize(2, 1);
-        hopperTab.add("Reverse Uptake", hopper.reverseUptakeCommand())
-            .withPosition(4, 0).withSize(2, 1);
-
-        // Carousel commands (row 1)
-        hopperTab.add("Run Carousel", hopper.runCarouselCommand())
-            .withPosition(0, 1).withSize(2, 1);
-        hopperTab.add("Stop Carousel", hopper.stopCarouselCommand())
-            .withPosition(2, 1).withSize(2, 1);
-        hopperTab.add("Reverse Carousel", hopper.reverseCarouselCommand())
-            .withPosition(4, 1).withSize(2, 1);
-
-        // Combined hopper commands (row 2)
-        hopperTab.add("Run Hopper", hopper.runHopperCommand())
-            .withPosition(0, 2).withSize(2, 1);
-        hopperTab.add("Stop Hopper", hopper.stopHopperCommand())
-            .withPosition(2, 2).withSize(2, 1);
-        hopperTab.add("Reverse Hopper", hopper.reverseHopperCommand())
-            .withPosition(4, 2).withSize(2, 1);
-
-        // RPM telemetry (row 3)
-        hopperTab.addNumber("Uptake RPM", hopper::getUptakeRPM)
-            .withPosition(0, 3).withSize(2, 1);
-        hopperTab.addNumber("Carousel RPM", hopper::getCarouselRPM)
-            .withPosition(2, 3).withSize(2, 1);
-
-        // Subsystem status (row 4)
-        hopperTab.add("Hopper Subsystem", hopper)
-            .withPosition(0, 4).withSize(3, 2);
-
-        // ==================== Combo Tab ====================
-        ShuffleboardTab comboTab = Shuffleboard.getTab("Combo");
-
-        // Combined commands (row 0)
-        comboTab.add("Shoot With Hopper", ShootCommand.shootWithHopper(shooter, hopper))
-            .withPosition(0, 0).withSize(2, 1);
-        comboTab.add("Stop All", ShootCommand.stopAll(shooter, hopper))
-            .withPosition(2, 0).withSize(2, 1);
-        comboTab.add("Reverse All", ShootCommand.reverseAll(shooter, hopper))
-            .withPosition(4, 0).withSize(2, 1);
-
-        // ==================== Add Your Subsystem Tabs Here ====================
-        // Example:
-        // ShuffleboardTab intakeTab = Shuffleboard.getTab("Intake");
-        // intakeTab.add("Run Intake", intake.runIntakeCommand())
-        //     .withPosition(0, 0).withSize(2, 1);
-        // intakeTab.add("Stop Intake", intake.stopIntakeCommand())
-        //     .withPosition(2, 0).withSize(2, 1);
-        // intakeTab.add("Intake Subsystem", intake)
-        //     .withPosition(0, 1).withSize(3, 2);
+        // Commands
+        Dash.addCommand("Spin 50 RPS", shooter.spinUpCommand(50));
+        Dash.addCommand("Spin 75 RPS", shooter.spinUpCommand(75));
+        Dash.addCommand("Spin For Distance", shooter.spinForDistanceCommand());
+        Dash.addCommand("Stop Flywheel", shooter.stopFlywheelCommand());
+        Dash.addCommand("Turret 0 deg", shooter.aimTurretCommand(0));
+        Dash.addCommand("Turret 90 deg", shooter.aimTurretCommand(90));
+        Dash.addCommand("Turret 180 deg", shooter.aimTurretCommand(180));
+        Dash.addCommand("Aim Turret Manual", shooter.aimTurretManualCommand());
+        Dash.addCommand("Stop Turret", shooter.stopTurretCommand());
+        Dash.addCommand("Toggle Mode", shooter.toggleModeCommand());
     }
 
     /**

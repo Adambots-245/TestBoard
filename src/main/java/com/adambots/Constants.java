@@ -12,14 +12,81 @@ import edu.wpi.first.units.measure.*;
 public final class Constants {
 
     /**
-     * Shooter constants for shooter wheel motors.
+     * Shooter test constants for PID velocity-controlled flywheel + position-controlled turret.
+     * Reference values from Adambots2026 simulation work.
      */
-    public static final class ShooterConstants {
-        // Motor speed (duty cycle -1.0 to 1.0)
-        public static final double kShooterSpeed = 0.75;
+    public static final class ShooterTestConstants {
+        // ==================== Flywheel Motor Specs ====================
+        // Kraken X60 free speed: ~6000 RPM = 100 RPS at 12V
+        // Update these if you swap motor type
+        public static final double kMotorFreeSpeedRPS = 100.0;
+        public static final double kNominalVoltage = 12.0;
 
-        // Current limit
-        public static final Current kShooterCurrentLimit = Amps.of(60);
+        // ==================== Flywheel PID Defaults ====================
+        public static final double kFlywheelP = 0.1;
+        public static final double kFlywheelI = 0;
+        public static final double kFlywheelD = 0;
+
+        // Feedforward: kF = nominalVoltage / motorFreeSpeedRPS
+        // = 12.0 / 100.0 = 0.12 V/RPS
+        // Verified against ReCalc flywheel calculator (0.37 V*s/m surface velocity
+        // * 2*pi*0.0508m wheel radius = 0.118 V/RPS -- matches within rounding)
+        // Recalculate if you change motor type, gear ratio, or voltage
+        public static final double kFlywheelFF = kNominalVoltage / kMotorFreeSpeedRPS;
+
+        // ==================== Turret PID Defaults (from Adambots2026 simulation) ====================
+        public static final double kTurretP = 0.05;
+        public static final double kTurretI = 0;
+        public static final double kTurretD = 0;
+
+        // ==================== Turret Mechanical ====================
+        // WCP GreyT Turret gear ratio (motor rotations per turret rotation)
+        // Default 100:1 -- UPDATE THIS once you confirm the actual ratio
+        // from your gearbox configuration (ring gear teeth / pinion teeth * gearbox stages)
+        public static final double kTurretGearRatio = 100.0;
+
+        public static final double kTurretMinDegrees = 0.0;
+        public static final double kTurretMaxDegrees = 180.0;
+
+        // Soft limit rotations derived from degrees/360 * gearRatio
+        public static final double kTurretForwardLimit = (kTurretMaxDegrees / 360.0) * kTurretGearRatio;
+        public static final double kTurretReverseLimit = (kTurretMinDegrees / 360.0) * kTurretGearRatio;
+
+        // ==================== Physics Constants ====================
+        public static final double kHoodAngleDegrees = 60.0;
+        public static final double kFlywheelRadiusMeters = 0.0508;
+        public static final double kExitVelocityMultiplier = 0.85;
+        public static final double kHubHeightMeters = 1.83;
+        public static final double kMaxFreeSpeedRPS = kMotorFreeSpeedRPS;
+        public static final double kFuelMassKg = 0.227;
+        public static final double kFuelDiameterMeters = 0.15;
+        public static final double kGravity = 9.81;
+
+        // EXIT HEIGHT - MUST BE MEASURED ON ACTUAL ROBOT
+        // How to measure: With the shooter mounted at the real robot height,
+        // place a ball in the shooter at the exit point. Measure from the
+        // floor to the center of the ball. Record in meters.
+        // Example: 18 inches = 0.4572 meters
+        public static final double kExitHeightMeters = 0.5;
+
+        // ==================== Flywheel Tolerance ====================
+        public static final double kFlywheelToleranceRPS = 2.0;
+
+        // ==================== Default Interpolation Table ====================
+        // Starting guesses for distance (meters) -> RPS, will be tuned
+        public static final double[][] kDefaultInterpolationTable = {
+            {1.0, 30.0},
+            {2.0, 45.0},
+            {3.0, 55.0},
+            {4.0, 65.0},
+            {5.0, 75.0}
+        };
+
+        // ==================== Current Limits ====================
+        public static final double kFlywheelStallCurrentLimit = 40.0;
+        public static final double kFlywheelFreeCurrentLimit = 60.0;
+        public static final double kTurretStallCurrentLimit = 20.0;
+        public static final double kTurretFreeCurrentLimit = 40.0;
     }
 
     /**
