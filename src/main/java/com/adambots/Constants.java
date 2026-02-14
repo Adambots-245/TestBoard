@@ -43,8 +43,8 @@ public final class Constants {
         // WCP GreyT Turret gear ratio (motor rotations per turret rotation)
         // Default 100:1 -- UPDATE THIS once you confirm the actual ratio
         // from your gearbox configuration (ring gear teeth / pinion teeth * gearbox stages)
-        public static final double kTurretGearRatio = 100.0;
-
+        public static final double kTurretGearRatio = 200.0/18.0; //was 100.0, 20 was mechs estimate 
+        //200 big wheel 18 small wheel 
         public static final double kTurretMinDegrees = 0.0;
         public static final double kTurretMaxDegrees = 180.0;
 
@@ -67,7 +67,7 @@ public final class Constants {
         // place a ball in the shooter at the exit point. Measure from the
         // floor to the center of the ball. Record in meters.
         // Example: 18 inches = 0.4572 meters
-        public static final double kExitHeightMeters = 0.5;
+        public static final double kExitHeightMeters = 0.4445;
 
         // ==================== Flywheel Tolerance ====================
         public static final double kFlywheelToleranceRPS = 2.0;
