@@ -36,8 +36,8 @@ public final class Constants {
     }
 
     public static final class IntakeConstants {
-        public static final int kIntakePort = 2; // Kraken X44
-        public static final int kIntakeArmPort = 0; // Minion
+        public static final int kIntakePort = 33; // Kraken X44
+        public static final int kIntakeArmPort = 32; // Minion
         
         public static final Current kIntakeCurrentLimit = Amps.of(40);
         public static final Current kIntakeArmCurrentLimit = Amps.of(40);
