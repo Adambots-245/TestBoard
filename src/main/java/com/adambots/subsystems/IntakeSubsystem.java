@@ -44,7 +44,9 @@ public class IntakeSubsystem extends SubsystemBase {
                 IntakeConstants.P,
                 IntakeConstants.I,
                 IntakeConstants.D,
-                IntakeConstants.F).apply();;
+                IntakeConstants.F)
+                .currentLimits(IntakeConstants.kStall, 40, IntakeConstants.kRPM)
+                .apply();
     }
 
     private void setupDash() {
@@ -182,9 +184,9 @@ public class IntakeSubsystem extends SubsystemBase {
     public void periodic() {
         if (intakeArmPEntry != null) {
             double p = intakeArmPEntry.getDouble(IntakeConstants.P);
-            double i = intakeArmPEntry.getDouble(IntakeConstants.I);
-            double d = intakeArmPEntry.getDouble(IntakeConstants.D);
-            double f = intakeArmPEntry.getDouble(IntakeConstants.F);
+            double i = intakeArmIEntry.getDouble(IntakeConstants.I);
+            double d = intakeArmDEntry.getDouble(IntakeConstants.D);
+            double f = intakeArmFEntry.getDouble(IntakeConstants.F);
 
             if (p != lastP || i != lastI || d != lastD || f != lastF) {
                 intakeArmMotor.setPID(0, p, i, d, f);
