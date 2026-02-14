@@ -102,7 +102,6 @@ public class IntakeSubsystem extends SubsystemBase {
      */
     public void lowerIntakeArm() {
         intakeArmMotor.set(ControlMode.POSITION, IntakeConstants.kLowerLimit);
-        intakeArmMotor.setPosition(0);
     }
 
     /**
