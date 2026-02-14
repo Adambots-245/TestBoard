@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 
 import com.adambots.commands.ShootCommand;
 import com.adambots.subsystems.HopperSubsystem;
+import com.adambots.subsystems.IntakeSubsystem;
 import com.adambots.subsystems.ShooterSubsystem;
 
 /**
@@ -25,7 +26,7 @@ public class RobotContainer {
 
     // ==================== Subsystems ====================
     private final ShooterSubsystem shooter;
-    private final HopperSubsystem hopper;
+    private final IntakeSubsystem intake;
 
     // Add your subsystems here:
     // private final IntakeSubsystem intake;
@@ -34,7 +35,7 @@ public class RobotContainer {
     public RobotContainer() {
         // Initialize subsystems with motors from RobotMap
         shooter = new ShooterSubsystem(RobotMap.shooterLeftMotor, RobotMap.shooterRightMotor);
-        hopper = new HopperSubsystem(RobotMap.uptakeMotor, RobotMap.carouselMotor);
+        intake = new IntakeSubsystem(RobotMap.intakeMotor, RobotMap.intakeArmMotor);
 
         // Add your subsystem initialization here:
         // intake = new IntakeSubsystem(RobotMap.intakeMotor);
@@ -71,52 +72,52 @@ public class RobotContainer {
             .withPosition(0, 2).withSize(3, 2);
 
         // ==================== Hopper Tab ====================
-        ShuffleboardTab hopperTab = Shuffleboard.getTab("Hopper");
+        // ShuffleboardTab hopperTab = Shuffleboard.getTab("Hopper");
 
         // Uptake commands (row 0)
-        hopperTab.add("Run Uptake", hopper.runUptakeCommand())
-            .withPosition(0, 0).withSize(2, 1);
-        hopperTab.add("Stop Uptake", hopper.stopUptakeCommand())
-            .withPosition(2, 0).withSize(2, 1);
-        hopperTab.add("Reverse Uptake", hopper.reverseUptakeCommand())
-            .withPosition(4, 0).withSize(2, 1);
+        // hopperTab.add("Run Uptake", hopper.runUptakeCommand())
+        //     .withPosition(0, 0).withSize(2, 1);
+        // hopperTab.add("Stop Uptake", hopper.stopUptakeCommand())
+        //     .withPosition(2, 0).withSize(2, 1);
+        // hopperTab.add("Reverse Uptake", hopper.reverseUptakeCommand())
+        //     .withPosition(4, 0).withSize(2, 1);
 
-        // Carousel commands (row 1)
-        hopperTab.add("Run Carousel", hopper.runCarouselCommand())
-            .withPosition(0, 1).withSize(2, 1);
-        hopperTab.add("Stop Carousel", hopper.stopCarouselCommand())
-            .withPosition(2, 1).withSize(2, 1);
-        hopperTab.add("Reverse Carousel", hopper.reverseCarouselCommand())
-            .withPosition(4, 1).withSize(2, 1);
+        // // Carousel commands (row 1)
+        // hopperTab.add("Run Carousel", hopper.runCarouselCommand())
+        //     .withPosition(0, 1).withSize(2, 1);
+        // hopperTab.add("Stop Carousel", hopper.stopCarouselCommand())
+        //     .withPosition(2, 1).withSize(2, 1);
+        // hopperTab.add("Reverse Carousel", hopper.reverseCarouselCommand())
+        //     .withPosition(4, 1).withSize(2, 1);
 
-        // Combined hopper commands (row 2)
-        hopperTab.add("Run Hopper", hopper.runHopperCommand())
-            .withPosition(0, 2).withSize(2, 1);
-        hopperTab.add("Stop Hopper", hopper.stopHopperCommand())
-            .withPosition(2, 2).withSize(2, 1);
-        hopperTab.add("Reverse Hopper", hopper.reverseHopperCommand())
-            .withPosition(4, 2).withSize(2, 1);
+        // // Combined hopper commands (row 2)
+        // hopperTab.add("Run Hopper", hopper.runHopperCommand())
+        //     .withPosition(0, 2).withSize(2, 1);
+        // hopperTab.add("Stop Hopper", hopper.stopHopperCommand())
+        //     .withPosition(2, 2).withSize(2, 1);
+        // hopperTab.add("Reverse Hopper", hopper.reverseHopperCommand())
+        //     .withPosition(4, 2).withSize(2, 1);
 
-        // RPM telemetry (row 3)
-        hopperTab.addNumber("Uptake RPM", hopper::getUptakeRPM)
-            .withPosition(0, 3).withSize(2, 1);
-        hopperTab.addNumber("Carousel RPM", hopper::getCarouselRPM)
-            .withPosition(2, 3).withSize(2, 1);
+        // // RPM telemetry (row 3)
+        // hopperTab.addNumber("Uptake RPM", hopper::getUptakeRPM)
+        //     .withPosition(0, 3).withSize(2, 1);
+        // hopperTab.addNumber("Carousel RPM", hopper::getCarouselRPM)
+        //     .withPosition(2, 3).withSize(2, 1);
 
-        // Subsystem status (row 4)
-        hopperTab.add("Hopper Subsystem", hopper)
-            .withPosition(0, 4).withSize(3, 2);
+        // // Subsystem status (row 4)
+        // hopperTab.add("Hopper Subsystem", hopper)
+        //     .withPosition(0, 4).withSize(3, 2);
 
-        // ==================== Combo Tab ====================
-        ShuffleboardTab comboTab = Shuffleboard.getTab("Combo");
+        // // ==================== Combo Tab ====================
+        // ShuffleboardTab comboTab = Shuffleboard.getTab("Combo");
 
-        // Combined commands (row 0)
-        comboTab.add("Shoot With Hopper", ShootCommand.shootWithHopper(shooter, hopper))
-            .withPosition(0, 0).withSize(2, 1);
-        comboTab.add("Stop All", ShootCommand.stopAll(shooter, hopper))
-            .withPosition(2, 0).withSize(2, 1);
-        comboTab.add("Reverse All", ShootCommand.reverseAll(shooter, hopper))
-            .withPosition(4, 0).withSize(2, 1);
+        // // Combined commands (row 0)
+        // comboTab.add("Shoot With Hopper", ShootCommand.shootWithHopper(shooter, hopper))
+        //     .withPosition(0, 0).withSize(2, 1);
+        // comboTab.add("Stop All", ShootCommand.stopAll(shooter, hopper))
+        //     .withPosition(2, 0).withSize(2, 1);
+        // comboTab.add("Reverse All", ShootCommand.reverseAll(shooter, hopper))
+        //     .withPosition(4, 0).withSize(2, 1);
 
         // ==================== Add Your Subsystem Tabs Here ====================
         // Example:

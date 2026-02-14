@@ -1,6 +1,7 @@
 package com.adambots;
 
 import com.adambots.lib.actuators.BaseMotor;
+import com.adambots.lib.actuators.MinionMotor;
 import com.adambots.lib.actuators.TalonFXMotor;
 
 /**
@@ -23,8 +24,8 @@ public class RobotMap {
     // Shooter Prototype
     public static final int kShooterLeftPort = 21;   // Kraken X60
     public static final int kShooterRightPort = 22;  // Kraken X60 (follower)
-    public static final int kUptakePort = 20;        // Kraken X44
-    public static final int kCarouselPort = 23;      // Kraken X44
+    public static final int kIntakePort = 20;        // Kraken X44
+    public static final int kIntakeArmPort = 23;      // Kraken X44
 
     // ==================== Motor Instances ====================
     // Using BaseMotor allows easy swap between motor types (TalonFX, NEO, etc.)
@@ -34,11 +35,11 @@ public class RobotMap {
     public static final BaseMotor shooterLeftMotor = new TalonFXMotor(kShooterLeftPort, false, 60.0, true);
     public static final BaseMotor shooterRightMotor = new TalonFXMotor(kShooterRightPort, false, 60.0, true);
 
-    // Hopper/Uptake motor (Kraken X44)
-    public static final BaseMotor uptakeMotor = new TalonFXMotor(kUptakePort, false, 40.0, true);
+    // Intake motor (Kraken X44)
+    public static final BaseMotor intakeMotor = new TalonFXMotor(kIntakePort, false, 40.0, true);
 
-    // Carousel motor (Kraken X44)
-    public static final BaseMotor carouselMotor = new TalonFXMotor(kCarouselPort, false, 40.0, true);
+    // IntakeArm motor (Minion)
+    public static final BaseMotor intakeArmMotor = new MinionMotor(kIntakeArmPort);
 
     // ==================== Add Your Motors Here ====================
     // Example:
