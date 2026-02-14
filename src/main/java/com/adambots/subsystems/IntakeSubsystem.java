@@ -1,20 +1,17 @@
 package com.adambots.subsystems;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
-import com.adambots.Constants.HopperConstants;
-import com.adambots.lib.Constants.IntakeConstants;
+import com.adambots.Constants.IntakeConstants;
 import com.adambots.lib.actuators.BaseMotor;
+import com.adambots.lib.actuators.BaseMotor.ControlMode;
 import com.adambots.lib.utils.Dash;
 
+import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-import groovyjarjarantlr4.v4.parse.ANTLRParser.finallyClause_return;
 
 /**
  * Intake subsystem for intaking game peices.
@@ -23,12 +20,18 @@ public class IntakeSubsystem extends SubsystemBase {
 
     private final BaseMotor intakeMotor;
     private final BaseMotor intakeArmMotor;
-    private final Trigger isLowered = new Trigger(() -> getIntakeArmPosition() == 0);
-    private final Trigger isRaised = new Trigger(() -> getIntakeArmPosition() == 90);
+
+    private GenericEntry intakeArmPEntry;
+    private GenericEntry intakeArmIEntry;
+    private GenericEntry intakeArmDEntry;
+    private GenericEntry intakeArmFEntry;
+
+    private double lastP, lastI, lastD, lastF;
 
     public IntakeSubsystem(BaseMotor intakeMotor, BaseMotor intakeArmMotor) {
         this.intakeMotor = intakeMotor;
         this.intakeArmMotor = intakeArmMotor;
+
         configureMotors();
         setupDash();
     }
@@ -36,6 +39,11 @@ public class IntakeSubsystem extends SubsystemBase {
     private void configureMotors() {
         intakeMotor.setBrakeMode(false);
         intakeArmMotor.setBrakeMode(true);
+        intakeArmMotor.configure().pid(
+                IntakeConstants.P,
+                IntakeConstants.I,
+                IntakeConstants.D,
+                IntakeConstants.F);
     }
 
     private void setupDash() {
@@ -43,6 +51,25 @@ public class IntakeSubsystem extends SubsystemBase {
         Dash.add("IntakeArmMotor Speed", () -> intakeMotor.getVelocity().in(RotationsPerSecond));
         Dash.add("IntakeMotor Position", () -> intakeMotor.getPosition());
         Dash.add("IntakeMotorArm Position", () -> intakeArmMotor.getPosition());
+        
+        Dash.addCommand("Reset Positon", resetIntakeArmPositon());
+        Dash.addCommand("Start Intake", runIntakeCommand());
+        Dash.addCommand("Reverse Intake", reverseIntakeCommand());
+        Dash.addCommand("Stop Intake", stopIntakeCommand());
+        Dash.addCommand("Lower Intake", runLowerIntakeArmCommand());
+        Dash.addCommand("Raise Intake", runRaiseIntakeArmCommand());
+    }
+
+    public void setupTunables() {
+        intakeArmPEntry = Dash.addTunable("Flywheel kP", IntakeConstants.P);
+        intakeArmIEntry = Dash.addTunable("Flywheel kI", IntakeConstants.I);
+        intakeArmDEntry = Dash.addTunable("Flywheel kD", IntakeConstants.D);
+        intakeArmFEntry = Dash.addTunable("Flywheel kF", IntakeConstants.F);
+
+        lastP = IntakeConstants.P;
+        lastI = IntakeConstants.I;
+        lastD = IntakeConstants.D;
+        lastF = IntakeConstants.F;
     }
 
     /**
@@ -70,14 +97,14 @@ public class IntakeSubsystem extends SubsystemBase {
      * Lower the intakeArm at the configured speed.
      */
     public void lowerIntakeArm() {
-        intakeArmMotor.set(-IntakeConstants.kLowSpeed);
+        intakeArmMotor.set(ControlMode.POSITION, IntakeConstants.kLowerLimit);
     }
 
     /**
      * Raise the intakeArm at the configured speed.
      */
     public void raiseIntakeArm() {
-        intakeArmMotor.set(IntakeConstants.kLowSpeed);
+        intakeArmMotor.set(ControlMode.POSITION, IntakeConstants.kUpperLimit);
     }
 
     /**
@@ -112,6 +139,13 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     /**
+     * Reset arm position
+     */
+    public Command resetIntakeArmPositon() {
+        return runOnce(() -> {intakeArmMotor.setPosition(0);}).withName("Rest Intake Positon");
+    }
+
+    /**
      * Command to reverse the uptake while held.
      */
     public Command reverseIntakeCommand() {
@@ -131,8 +165,7 @@ public class IntakeSubsystem extends SubsystemBase {
      * Command to run the carousel while held.
      */
     public Command runLowerIntakeArmCommand() {
-        return Commands.run(() -> lowerIntakeArm())
-                .until(isLowered)
+        return Commands.runOnce(() -> lowerIntakeArm())
                 .withName("Lower Intake Arm");
     }
 
@@ -140,13 +173,25 @@ public class IntakeSubsystem extends SubsystemBase {
      * Command to run the carousel while held.
      */
     public Command runRaiseIntakeArmCommand() {
-        return Commands.run(() -> raiseIntakeArm())
-                .until(isRaised)
+        return Commands.runOnce(() -> raiseIntakeArm())
                 .withName("Raise Intake Arm");
     }
 
     @Override
     public void periodic() {
-        // Add telemetry here if needed
+        if (intakeArmPEntry != null) {
+            double p = intakeArmPEntry.getDouble(IntakeConstants.P);
+            double i = intakeArmPEntry.getDouble(IntakeConstants.I);
+            double d = intakeArmPEntry.getDouble(IntakeConstants.D);
+            double f = intakeArmPEntry.getDouble(IntakeConstants.F);
+
+            if (p != lastP || i != lastI || d != lastD || f != lastF) {
+                intakeArmMotor.setPID(0, p, i, d, f);
+                lastP = p;
+                lastI = i;
+                lastD = d;
+                lastF = f;
+            }
+        }
     }
 }

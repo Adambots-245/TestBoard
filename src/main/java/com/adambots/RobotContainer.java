@@ -43,6 +43,7 @@ public class RobotContainer {
 
         // Setup Shuffleboard tabs with commands
         setupDashboard();
+        intake.setupTunables();
     }
 
     /**
