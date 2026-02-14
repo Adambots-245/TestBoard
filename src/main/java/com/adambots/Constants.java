@@ -50,6 +50,9 @@ public final class Constants {
         public static final double D = 0;
         public static final double F = 0.12;
 
+        public static final double kIntakeMotorRatio = 24 / 36;
+        public static final double kIntakeArmMotorRatio = 18 / 36;
+
         public static final double kLowSpeed = 0.3;
         public static final double kHighSpeed = 0.5; 
 
