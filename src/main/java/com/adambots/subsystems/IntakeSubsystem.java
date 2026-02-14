@@ -37,18 +37,19 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     private void configureMotors() {
+        // TODO(vx-clutch): configure intakeMotor
         intakeMotor.setBrakeMode(false);
         intakeArmMotor.setBrakeMode(true);
         intakeArmMotor.configure().pid(
                 IntakeConstants.P,
                 IntakeConstants.I,
                 IntakeConstants.D,
-                IntakeConstants.F);
+                IntakeConstants.F).apply();;
     }
 
     private void setupDash() {
         Dash.add("IntakeMotor Speed", () -> intakeMotor.getVelocity().in(RotationsPerSecond));
-        Dash.add("IntakeArmMotor Speed", () -> intakeMotor.getVelocity().in(RotationsPerSecond));
+        Dash.add("IntakeArmMotor Speed", () -> intakeArmMotor.getVelocity().in(RotationsPerSecond));
         Dash.add("IntakeMotor Position", () -> intakeMotor.getPosition());
         Dash.add("IntakeMotorArm Position", () -> intakeArmMotor.getPosition());
         
@@ -61,10 +62,10 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void setupTunables() {
-        intakeArmPEntry = Dash.addTunable("Flywheel kP", IntakeConstants.P);
-        intakeArmIEntry = Dash.addTunable("Flywheel kI", IntakeConstants.I);
-        intakeArmDEntry = Dash.addTunable("Flywheel kD", IntakeConstants.D);
-        intakeArmFEntry = Dash.addTunable("Flywheel kF", IntakeConstants.F);
+        intakeArmPEntry = Dash.addTunable("IntakeArm kP", IntakeConstants.P);
+        intakeArmIEntry = Dash.addTunable("IntakeArm kI", IntakeConstants.I);
+        intakeArmDEntry = Dash.addTunable("IntakeArm kD", IntakeConstants.D);
+        intakeArmFEntry = Dash.addTunable("IntakeArm kF", IntakeConstants.F);
 
         lastP = IntakeConstants.P;
         lastI = IntakeConstants.I;
