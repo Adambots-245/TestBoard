@@ -25,7 +25,7 @@ import com.adambots.subsystems.ShooterSubsystem;
 public class RobotContainer {
 
     // ==================== Subsystems ====================
-    private final ShooterSubsystem shooter;
+    //private final ShooterSubsystem shooter;
     private final IntakeSubsystem intake;
 
     // Add your subsystems here:
@@ -34,7 +34,7 @@ public class RobotContainer {
 
     public RobotContainer() {
         // Initialize subsystems with motors from RobotMap
-        shooter = new ShooterSubsystem(RobotMap.shooterLeftMotor, RobotMap.shooterRightMotor);
+        //shooter = new ShooterSubsystem(RobotMap.shooterLeftMotor, RobotMap.shooterRightMotor);
         intake = new IntakeSubsystem(RobotMap.intakeMotor, RobotMap.intakeArmMotor);
 
         // Add your subsystem initialization here:
@@ -51,26 +51,26 @@ public class RobotContainer {
      * Tabs persist between runs - just rearrange widgets as needed.
      */
     private void setupDashboard() {
-        // ==================== Shooter Tab ====================
-        ShuffleboardTab shooterTab = Shuffleboard.getTab("Shooter");
+        // // ==================== Shooter Tab ====================
+        // ShuffleboardTab shooterTab = Shuffleboard.getTab("Shooter");
 
-        // Shooter wheel commands (row 0)
-        shooterTab.add("Run Shooter", shooter.runShooterCommand())
-            .withPosition(0, 0).withSize(2, 1);
-        shooterTab.add("Stop Shooter", shooter.stopShooterCommand())
-            .withPosition(2, 0).withSize(2, 1);
-        shooterTab.add("Reverse Shooter", shooter.reverseShooterCommand())
-            .withPosition(4, 0).withSize(2, 1);
+        // // Shooter wheel commands (row 0)
+        // // shooterTab.add("Run Shooter", shooter.runShooterCommand())
+        //     .withPosition(0, 0).withSize(2, 1);
+        // shooterTab.add("Stop Shooter", shooter.stopShooterCommand())
+        //     .withPosition(2, 0).withSize(2, 1);
+        // shooterTab.add("Reverse Shooter", shooter.reverseShooterCommand())
+        //     .withPosition(4, 0).withSize(2, 1);
 
-        // RPM telemetry (row 1)
-        shooterTab.addNumber("Left RPM", shooter::getLeftRPM)
-            .withPosition(0, 1).withSize(2, 1);
-        shooterTab.addNumber("Right RPM", shooter::getRightRPM)
-            .withPosition(2, 1).withSize(2, 1);
+        // // RPM telemetry (row 1)
+        // shooterTab.addNumber("Left RPM", shooter::getLeftRPM)
+        //     .withPosition(0, 1).withSize(2, 1);
+        // shooterTab.addNumber("Right RPM", shooter::getRightRPM)
+        //     .withPosition(2, 1).withSize(2, 1);
 
-        // Subsystem status (row 2)
-        shooterTab.add("Shooter Subsystem", shooter)
-            .withPosition(0, 2).withSize(3, 2);
+        // // Subsystem status (row 2)
+        // shooterTab.add("Shooter Subsystem", shooter)
+        //     .withPosition(0, 2).withSize(3, 2);
 
         // ==================== Hopper Tab ====================
         // ShuffleboardTab hopperTab = Shuffleboard.getTab("Hopper");

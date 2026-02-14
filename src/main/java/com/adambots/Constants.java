@@ -45,10 +45,10 @@ public final class Constants {
         public static final double kIntakeSpeed = 0.5;
         public static final double kIntakeArmSpeed = 0.5;
 
-        public static final double P = 0.05;
-        public static final double I = 0;
-        public static final double D = 0;
-        public static final double F = 0.12;
+        public static final double P = 1.30;
+        public static final double I = 0.0;
+        public static final double D = 0.0;
+        public static final double F = 0.25;
 
         public static final double kIntakeMotorRatio = 24.0 / 36.0;
         public static final double kIntakeArmMotorRatio = 18.0 / 36.0;
@@ -59,11 +59,11 @@ public final class Constants {
         public static final double kMinDegrees = 0.0;
         public static final double kMaxDegrees = 90;
 
-        public static final double kUpperLimit = (kMaxDegrees / 360.0) * kIntakeArmMotorRatio;
-        public static final double kLowerLimit = (kMinDegrees / 360.0) * kIntakeArmMotorRatio;
+        public static final double kUpperLimit = -7.0; //(kMaxDegrees / 360.0) * kIntakeArmMotorRatio;
+        public static final double kLowerLimit = 0; //(kMinDegrees / 360.0) * kIntakeArmMotorRatio;
 
         public static final int kStall = 20;
-        public static final int kRPM = 3000;
+        public static final int kRPM = 3200;
     }
 
     // ==================== Add Your Constants Here ====================

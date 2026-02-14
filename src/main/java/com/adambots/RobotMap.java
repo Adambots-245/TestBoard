@@ -31,8 +31,8 @@ public class RobotMap {
     // TalonFXMotor(portNum, isOnCANivore, supplyCurrentLimit, isKraken)
 
     // Shooter motors (Kraken X60)
-    public static final BaseMotor shooterLeftMotor = new TalonFXMotor(kShooterLeftPort, false, 60.0, true);
-    public static final BaseMotor shooterRightMotor = new TalonFXMotor(kShooterRightPort, false, 60.0, true);
+    //public static final BaseMotor shooterLeftMotor = new TalonFXMotor(kShooterLeftPort, false, 60.0, true);
+    //public static final BaseMotor shooterRightMotor = new TalonFXMotor(kShooterRightPort, false, 60.0, true);
 
     // Intake motor (Kraken X44)
     public static final BaseMotor intakeMotor = new TalonFXMotor(IntakeConstants.kIntakePort, false, 40.0, true);

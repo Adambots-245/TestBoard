@@ -39,12 +39,12 @@ public class IntakeSubsystem extends SubsystemBase {
     private void configureMotors() {
         // TODO(vx-clutch): configure intakeMotor
         intakeMotor.setBrakeMode(false);
-        intakeArmMotor.setBrakeMode(true);
         intakeArmMotor.configure().pid(
                 IntakeConstants.P,
                 IntakeConstants.I,
                 IntakeConstants.D,
                 IntakeConstants.F)
+                .brakeMode(true)
                 .currentLimits(IntakeConstants.kStall, 40, IntakeConstants.kRPM)
                 .apply();
     }
@@ -54,7 +54,8 @@ public class IntakeSubsystem extends SubsystemBase {
         Dash.add("IntakeArmMotor Speed", () -> intakeArmMotor.getVelocity().in(RotationsPerSecond));
         Dash.add("IntakeMotor Position", () -> intakeMotor.getPosition());
         Dash.add("IntakeMotorArm Position", () -> intakeArmMotor.getPosition());
-        
+        Dash.add("Upper Limit", ()->IntakeConstants.kUpperLimit);
+
         Dash.addCommand("Reset Positon", resetIntakeArmPositon());
         Dash.addCommand("Start Intake", runIntakeCommand());
         Dash.addCommand("Reverse Intake", reverseIntakeCommand());
@@ -101,6 +102,7 @@ public class IntakeSubsystem extends SubsystemBase {
      */
     public void lowerIntakeArm() {
         intakeArmMotor.set(ControlMode.POSITION, IntakeConstants.kLowerLimit);
+        intakeArmMotor.setPosition(0);
     }
 
     /**
