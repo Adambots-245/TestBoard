@@ -82,6 +82,7 @@ public class IntakeSubsystem extends SubsystemBase {
         Dash.addCommand("Stop Intake", stopIntakeCommand());
         Dash.addCommand("Lower Intake", runLowerIntakeArmCommand());
         Dash.addCommand("Raise Intake", runRaiseIntakeArmCommand());
+        Dash.addCommand("Stop Arm", stopIntakeArmCommand());
     }
 
     public void setupTunables() {
@@ -212,6 +213,14 @@ public class IntakeSubsystem extends SubsystemBase {
     public Command runRaiseIntakeArmCommand() {
         return Commands.runOnce(() -> raiseIntakeArm())
                 .withName("Raise Intake Arm");
+    }
+
+    /**
+     * Command to stop the intake arm and disable PID position control.
+     */
+    public Command stopIntakeArmCommand() {
+        return Commands.runOnce(() -> stopIntakeArm())
+                .withName("Stop Intake Arm");
     }
 
     @Override
