@@ -5,6 +5,8 @@ import com.adambots.lib.actuators.BaseMotor;
 import com.adambots.lib.actuators.MinionMotor;
 import com.adambots.lib.actuators.TalonFXMotor;
 
+import edu.wpi.first.wpilibj.DigitalInput;
+
 /**
  * RobotMap defines all hardware port assignments and motor instances for TestBoard.
  *
@@ -39,6 +41,9 @@ public class RobotMap {
 
     // IntakeArm motor (Minion)
     public static final BaseMotor intakeArmMotor = new MinionMotor(IntakeConstants.kIntakeArmPort);
+
+    // Intake arm limit switch (at upper/raised position)
+    public static final DigitalInput intakeArmLimitSwitch = new DigitalInput(IntakeConstants.kLimitSwitchPort);
 
     // ==================== Add Your Motors Here ====================
     // Example:

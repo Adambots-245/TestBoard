@@ -45,10 +45,10 @@ public final class Constants {
         public static final double kIntakeSpeed = 0.5;
         public static final double kIntakeArmSpeed = 0.5;
 
-        public static final double P = 1.30;
+        public static final double P = 0.1;
         public static final double I = 0.0;
         public static final double D = 0.0;
-        public static final double F = 0.25;
+        public static final double kGravityFF = 0.3; // Constant gravity feedforward (tune on robot)
 
         public static final double kIntakeMotorRatio = 24.0 / 36.0;
         public static final double kIntakeArmMotorRatio = 18.0 / 36.0;
@@ -64,6 +64,8 @@ public final class Constants {
 
         public static final int kStall = 20;
         public static final int kRPM = 3200;
+
+        public static final int kLimitSwitchPort = 0; // DIO port for arm limit switch
     }
 
     // ==================== Add Your Constants Here ====================

@@ -35,7 +35,7 @@ public class RobotContainer {
     public RobotContainer() {
         // Initialize subsystems with motors from RobotMap
         //shooter = new ShooterSubsystem(RobotMap.shooterLeftMotor, RobotMap.shooterRightMotor);
-        intake = new IntakeSubsystem(RobotMap.intakeMotor, RobotMap.intakeArmMotor);
+        intake = new IntakeSubsystem(RobotMap.intakeMotor, RobotMap.intakeArmMotor, RobotMap.intakeArmLimitSwitch);
 
         // Add your subsystem initialization here:
         // intake = new IntakeSubsystem(RobotMap.intakeMotor);
