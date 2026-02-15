@@ -45,9 +45,9 @@ public final class Constants {
         public static final double kIntakeSpeed = 0.5;
         public static final double kIntakeArmSpeed = 0.5;
 
-        public static final double P = 0.1;
-        public static final double I = 0.0;
-        public static final double D = 0.0;
+        public static final double kArmP = 0.1;
+        public static final double kArmI = 0.0;
+        public static final double kArmD = 0.0;
         public static final double kGravityFF = 0.3; // Constant gravity feedforward (tune on robot)
 
         public static final double kIntakeMotorRatio = 24.0 / 36.0;

@@ -42,7 +42,7 @@ public class IntakeSubsystem extends SubsystemBase {
         this.intakeArmMotor = intakeArmMotor;
         this.limitSwitch = limitSwitch;
 
-        armPID = new PIDController(IntakeConstants.P, IntakeConstants.I, IntakeConstants.D);
+        armPID = new PIDController(IntakeConstants.kArmP, IntakeConstants.kArmI, IntakeConstants.kArmD);
         armPID.setTolerance(0.1);
 
         configureMotors();
@@ -86,14 +86,14 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void setupTunables() {
-        intakeArmPEntry = Dash.addTunable("IntakeArm kP", IntakeConstants.P);
-        intakeArmIEntry = Dash.addTunable("IntakeArm kI", IntakeConstants.I);
-        intakeArmDEntry = Dash.addTunable("IntakeArm kD", IntakeConstants.D);
+        intakeArmPEntry = Dash.addTunable("IntakeArm kP", IntakeConstants.kArmP);
+        intakeArmIEntry = Dash.addTunable("IntakeArm kI", IntakeConstants.kArmI);
+        intakeArmDEntry = Dash.addTunable("IntakeArm kD", IntakeConstants.kArmD);
         intakeArmFFEntry = Dash.addTunable("IntakeArm kGravityFF", IntakeConstants.kGravityFF);
 
-        lastP = IntakeConstants.P;
-        lastI = IntakeConstants.I;
-        lastD = IntakeConstants.D;
+        lastP = IntakeConstants.kArmP;
+        lastI = IntakeConstants.kArmI;
+        lastD = IntakeConstants.kArmD;
         lastFF = IntakeConstants.kGravityFF;
     }
 
@@ -236,9 +236,9 @@ public class IntakeSubsystem extends SubsystemBase {
 
         // Update PID gains from Shuffleboard tunables
         if (intakeArmPEntry != null) {
-            double p = intakeArmPEntry.getDouble(IntakeConstants.P);
-            double i = intakeArmIEntry.getDouble(IntakeConstants.I);
-            double d = intakeArmDEntry.getDouble(IntakeConstants.D);
+            double p = intakeArmPEntry.getDouble(IntakeConstants.kArmP);
+            double i = intakeArmIEntry.getDouble(IntakeConstants.kArmI);
+            double d = intakeArmDEntry.getDouble(IntakeConstants.kArmD);
             double ff = intakeArmFFEntry.getDouble(IntakeConstants.kGravityFF);
 
             if (p != lastP || i != lastI || d != lastD) {
