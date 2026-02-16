@@ -2,13 +2,12 @@ package com.adambots.subsystems;
 
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 
 import com.adambots.Constants.IntakeConstants;
 import com.adambots.lib.actuators.BaseMotor;
 import com.adambots.lib.utils.Dash;
 
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -17,7 +16,10 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 /**
- * Intake subsystem for intaking game peices.
+ * Intake subsystem using TalonFX onboard PID with gravity compensation.
+ *
+ * <p>The arm motor runs Motion Magic with Arm_Cosine gravity feedforward at 1kHz
+ * on the motor controller, providing stable holding and smooth motion.
  */
 public class IntakeSubsystem extends SubsystemBase {
 
@@ -25,25 +27,23 @@ public class IntakeSubsystem extends SubsystemBase {
     private final BaseMotor intakeArmMotor;
     private final DigitalInput limitSwitch;
 
-    private final PIDController armPID;
-
+    // Tunable PID entries
     private GenericEntry intakeArmPEntry;
     private GenericEntry intakeArmIEntry;
     private GenericEntry intakeArmDEntry;
-    private GenericEntry intakeArmFFEntry;
+    private GenericEntry intakeArmKGEntry;
+    private GenericEntry intakeArmKSEntry;
+    private GenericEntry intakeArmKVEntry;
+    private GenericEntry intakeArmKAEntry;
 
-    private double lastP, lastI, lastD, lastFF;
+    private double lastP, lastI, lastD, lastKG, lastKS, lastKV, lastKA;
 
     private double targetPosition = IntakeConstants.kLowerLimit;
-    private boolean positionControlActive = false;
 
     public IntakeSubsystem(BaseMotor intakeMotor, BaseMotor intakeArmMotor, DigitalInput limitSwitch) {
         this.intakeMotor = intakeMotor;
         this.intakeArmMotor = intakeArmMotor;
         this.limitSwitch = limitSwitch;
-
-        armPID = new PIDController(IntakeConstants.kArmP, IntakeConstants.kArmI, IntakeConstants.kArmD);
-        armPID.setTolerance(0.1);
 
         configureMotors();
         setupDash();
@@ -51,12 +51,24 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     private void configureMotors() {
-        // TODO(vx-clutch): configure intakeMotor
         intakeMotor.setBrakeMode(false);
+
+        // Configure arm motor: brake mode + current limits
         intakeArmMotor.configure()
                 .brakeMode(true)
                 .currentLimits(IntakeConstants.kStall, 40, IntakeConstants.kRPM)
+                .gravity(BaseMotor.GravityType.ARM_COSINE)
+                .motionMagic(
+                    RotationsPerSecond.of(IntakeConstants.kArmCruiseVelocity),
+                    RotationsPerSecondPerSecond.of(IntakeConstants.kArmAcceleration),
+                    IntakeConstants.kArmJerk)
                 .apply();
+
+        // Set extended PID with feedforward gains (kV, kS, kA, kG)
+        intakeArmMotor.setPID(0,
+                IntakeConstants.kArmP, IntakeConstants.kArmI, IntakeConstants.kArmD,
+                IntakeConstants.kArmKV, IntakeConstants.kArmKS, IntakeConstants.kArmKA,
+                IntakeConstants.kArmKG);
     }
 
     private void configureLimitSwitch() {
@@ -73,10 +85,11 @@ public class IntakeSubsystem extends SubsystemBase {
         Dash.add("IntakeArmMotor Speed", () -> intakeArmMotor.getVelocity().in(RotationsPerSecond));
         Dash.add("IntakeMotor Position", () -> intakeMotor.getPosition());
         Dash.add("IntakeMotorArm Position", () -> intakeArmMotor.getPosition());
+        Dash.add("Arm Target Position", () -> targetPosition);
         Dash.add("Upper Limit", () -> IntakeConstants.kUpperLimit);
         Dash.add("Limit Switch", () -> limitSwitch.get());
 
-        Dash.addCommand("Reset Positon", resetIntakeArmPositon());
+        Dash.addCommand("Reset Position", resetIntakeArmPosition());
         Dash.addCommand("Start Intake", runIntakeCommand());
         Dash.addCommand("Reverse Intake", reverseIntakeCommand());
         Dash.addCommand("Stop Intake", stopIntakeCommand());
@@ -89,78 +102,73 @@ public class IntakeSubsystem extends SubsystemBase {
         intakeArmPEntry = Dash.addTunable("IntakeArm kP", IntakeConstants.kArmP);
         intakeArmIEntry = Dash.addTunable("IntakeArm kI", IntakeConstants.kArmI);
         intakeArmDEntry = Dash.addTunable("IntakeArm kD", IntakeConstants.kArmD);
-        intakeArmFFEntry = Dash.addTunable("IntakeArm kGravityFF", IntakeConstants.kGravityFF);
+        intakeArmKGEntry = Dash.addTunable("IntakeArm kG", IntakeConstants.kArmKG);
+        intakeArmKSEntry = Dash.addTunable("IntakeArm kS", IntakeConstants.kArmKS);
+        intakeArmKVEntry = Dash.addTunable("IntakeArm kV", IntakeConstants.kArmKV);
+        intakeArmKAEntry = Dash.addTunable("IntakeArm kA", IntakeConstants.kArmKA);
 
         lastP = IntakeConstants.kArmP;
         lastI = IntakeConstants.kArmI;
         lastD = IntakeConstants.kArmD;
-        lastFF = IntakeConstants.kGravityFF;
+        lastKG = IntakeConstants.kArmKG;
+        lastKS = IntakeConstants.kArmKS;
+        lastKV = IntakeConstants.kArmKV;
+        lastKA = IntakeConstants.kArmKA;
     }
 
     /**
-     * Run the uptake at the configured speed.
+     * Run the intake roller at the configured speed.
      */
     public void runIntake() {
         intakeMotor.set(IntakeConstants.kLowSpeed);
     }
 
     /**
-     * Run the uptake in reverse.
+     * Run the intake roller in reverse.
      */
     public void reverseIntake() {
         intakeMotor.set(-IntakeConstants.kLowSpeed);
     }
 
     /**
-     * Stop the uptake motor.
+     * Stop the intake roller motor.
      */
     public void stopIntake() {
         intakeMotor.set(0);
     }
 
     /**
-     * Lower the intakeArm to the lower position.
+     * Lower the intake arm using onboard Motion Magic with gravity compensation.
      */
     public void lowerIntakeArm() {
         targetPosition = IntakeConstants.kLowerLimit;
-        positionControlActive = true;
-        armPID.reset();
+        intakeArmMotor.set(BaseMotor.ControlMode.MOTION_MAGIC, targetPosition);
     }
 
     /**
-     * Raise the intakeArm to the upper position.
+     * Raise the intake arm using onboard Motion Magic with gravity compensation.
      */
     public void raiseIntakeArm() {
         targetPosition = IntakeConstants.kUpperLimit;
-        positionControlActive = true;
-        armPID.reset();
+        intakeArmMotor.set(BaseMotor.ControlMode.MOTION_MAGIC, targetPosition);
     }
 
     /**
      * Stop the intake arm motor.
      */
     public void stopIntakeArm() {
-        positionControlActive = false;
         intakeArmMotor.set(0);
     }
 
     /**
-     * Calculate constant gravity feedforward.
-     * Negative because the arm must be driven in the negative direction to raise.
-     */
-    private double calculateGravityFF() {
-        return -lastFF;
-    }
-
-    /**
-     * Get the uptake motor RPM.
+     * Get the intake roller motor RPM.
      */
     public double getintakeRPM() {
         return intakeMotor.getVelocity().in(RPM);
     }
 
     /**
-     * Get the intakeArmMotor position.
+     * Get the intake arm motor position.
      */
     public double getIntakeArmPosition() {
         return intakeArmMotor.getPosition();
@@ -169,7 +177,7 @@ public class IntakeSubsystem extends SubsystemBase {
     // ==================== Command Factory Methods ====================
 
     /**
-     * Command to run the uptake while held.
+     * Command to run the intake while held.
      */
     public Command runIntakeCommand() {
         return runEnd(this::runIntake, this::stopIntake)
@@ -177,14 +185,15 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     /**
-     * Reset arm position
+     * Reset arm position encoder to 0.
      */
-    public Command resetIntakeArmPositon() {
-        return runOnce(() -> {intakeArmMotor.setPosition(0);}).withName("Rest Intake Positon");
+    public Command resetIntakeArmPosition() {
+        return runOnce(() -> intakeArmMotor.setPosition(0))
+                .withName("Reset Intake Position");
     }
 
     /**
-     * Command to reverse the uptake while held.
+     * Command to reverse the intake while held.
      */
     public Command reverseIntakeCommand() {
         return runEnd(this::reverseIntake, this::stopIntake)
@@ -192,7 +201,7 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     /**
-     * Command to stop the uptake (instant).
+     * Command to stop the intake (instant).
      */
     public Command stopIntakeCommand() {
         return runOnce(this::stopIntake)
@@ -200,7 +209,7 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     /**
-     * Command to lower the intake arm.
+     * Command to lower the intake arm using onboard Motion Magic.
      */
     public Command runLowerIntakeArmCommand() {
         return Commands.runOnce(() -> lowerIntakeArm())
@@ -208,7 +217,7 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     /**
-     * Command to raise the intake arm.
+     * Command to raise the intake arm using onboard Motion Magic.
      */
     public Command runRaiseIntakeArmCommand() {
         return Commands.runOnce(() -> raiseIntakeArm())
@@ -216,7 +225,7 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     /**
-     * Command to stop the intake arm and disable PID position control.
+     * Command to stop the intake arm.
      */
     public Command stopIntakeArmCommand() {
         return Commands.runOnce(() -> stopIntakeArm())
@@ -225,30 +234,30 @@ public class IntakeSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        // WPILib PID + gravity feedforward control loop
-        if (positionControlActive) {
-            double currentPosition = intakeArmMotor.getPosition();
-            double pidOutput = armPID.calculate(currentPosition, targetPosition);
-            double gravityFF = calculateGravityFF();
-            double output = MathUtil.clamp(pidOutput + gravityFF, -1.0, 1.0);
-            intakeArmMotor.set(output);
-        }
+        // No PID loop here - the motor controller handles everything at 1kHz.
+        // We only check for tunable gain updates from Shuffleboard.
 
-        // Update PID gains from Shuffleboard tunables
         if (intakeArmPEntry != null) {
             double p = intakeArmPEntry.getDouble(IntakeConstants.kArmP);
             double i = intakeArmIEntry.getDouble(IntakeConstants.kArmI);
             double d = intakeArmDEntry.getDouble(IntakeConstants.kArmD);
-            double ff = intakeArmFFEntry.getDouble(IntakeConstants.kGravityFF);
+            double kG = intakeArmKGEntry.getDouble(IntakeConstants.kArmKG);
+            double kS = intakeArmKSEntry.getDouble(IntakeConstants.kArmKS);
+            double kV = intakeArmKVEntry.getDouble(IntakeConstants.kArmKV);
+            double kA = intakeArmKAEntry.getDouble(IntakeConstants.kArmKA);
 
-            if (p != lastP || i != lastI || d != lastD) {
-                armPID.setPID(p, i, d);
+            if (p != lastP || i != lastI || d != lastD ||
+                kG != lastKG || kS != lastKS || kV != lastKV || kA != lastKA) {
+
+                intakeArmMotor.setPID(0, p, i, d, kV, kS, kA, kG);
+
                 lastP = p;
                 lastI = i;
                 lastD = d;
-            }
-            if (ff != lastFF) {
-                lastFF = ff;
+                lastKG = kG;
+                lastKS = kS;
+                lastKV = kV;
+                lastKA = kA;
             }
         }
     }
