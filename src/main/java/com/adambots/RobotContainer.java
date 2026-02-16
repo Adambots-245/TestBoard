@@ -5,8 +5,10 @@ import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 
+import com.adambots.commands.ShootCommand;
 import com.adambots.lib.utils.Dash;
 import com.adambots.subsystems.ShooterSubsystem;
+import com.adambots.subsystems.UptakeSubsystem;
 
 /**
  * RobotContainer for TestBoard - a subsystem testing platform.
@@ -24,10 +26,12 @@ public class RobotContainer {
 
     // ==================== Subsystems ====================
     private final ShooterSubsystem shooter;
+    private final UptakeSubsystem uptake;
 
     public RobotContainer() {
         // Initialize subsystems with motors from RobotMap
         shooter = new ShooterSubsystem(RobotMap.shooterLeftMotor, RobotMap.shooterRightMotor, RobotMap.turretMotor);
+        uptake = new UptakeSubsystem(RobotMap.uptakeMotor);
 
         // Setup Shuffleboard tabs with commands
         setupDashboard();
@@ -66,6 +70,21 @@ public class RobotContainer {
         Dash.addCommand("Aim Turret Manual", shooter.aimTurretManualCommand());
         Dash.addCommand("Stop Turret", shooter.stopTurretCommand());
         Dash.addCommand("Toggle Mode", shooter.toggleModeCommand());
+
+        // ==================== Uptake Tab (via Dash) ====================
+        Dash.useTab("Uptake");
+
+        // Telemetry
+        Dash.add("Uptake RPM", uptake::getUptakeRPM);
+        Dash.add("Uptake Amps", () -> RobotMap.uptakeMotor.getCurrentDraw().in(Amps));
+
+        // Commands
+        Dash.addCommand("Run Uptake", uptake.runUptakeCommand());
+        Dash.addCommand("Reverse Uptake", uptake.reverseUptakeCommand());
+        Dash.addCommand("Stop Uptake", uptake.stopUptakeCommand());
+        Dash.addCommand("Shoot With Uptake", ShootCommand.shootWithUptake(shooter, uptake));
+        Dash.addCommand("Reverse All", ShootCommand.reverseAll(shooter, uptake));
+        Dash.addCommand("Stop All", ShootCommand.stopAll(shooter, uptake));
     }
 
     /**

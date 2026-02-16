@@ -1,45 +1,45 @@
 package com.adambots.commands;
 
-import com.adambots.subsystems.HopperSubsystem;
+import com.adambots.subsystems.UptakeSubsystem;
 import com.adambots.subsystems.ShooterSubsystem;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 
 /**
- * Combo commands for coordinating shooter and hopper subsystems.
+ * Combo commands for coordinating shooter and uptake subsystems.
  */
 public class ShootCommand {
 
     /**
-     * Command to run shooter, uptake, and carousel together while held.
+     * Command to run shooter and uptake together while held.
      * All stop when the command ends.
      */
-    public static Command shootWithHopper(ShooterSubsystem shooter, HopperSubsystem hopper) {
+    public static Command shootWithUptake(ShooterSubsystem shooter, UptakeSubsystem uptake) {
         return Commands.parallel(
             shooter.runShooterCommand(),
-            hopper.runHopperCommand()
-        ).withName("Shoot With Hopper");
+            uptake.runUptakeCommand()
+        ).withName("Shoot With Uptake");
     }
 
     /**
-     * Command to reverse shooter, uptake, and carousel together while held.
+     * Command to reverse shooter and uptake together while held.
      * Useful for clearing jams.
      */
-    public static Command reverseAll(ShooterSubsystem shooter, HopperSubsystem hopper) {
+    public static Command reverseAll(ShooterSubsystem shooter, UptakeSubsystem uptake) {
         return Commands.parallel(
             shooter.reverseShooterCommand(),
-            hopper.reverseHopperCommand()
+            uptake.reverseUptakeCommand()
         ).withName("Reverse All");
     }
 
     /**
-     * Command to stop shooter, uptake, and carousel (instant).
+     * Command to stop shooter and uptake (instant).
      */
-    public static Command stopAll(ShooterSubsystem shooter, HopperSubsystem hopper) {
+    public static Command stopAll(ShooterSubsystem shooter, UptakeSubsystem uptake) {
         return Commands.parallel(
             shooter.stopShooterCommand(),
-            hopper.stopHopperCommand()
+            uptake.stopUptakeCommand()
         ).withName("Stop All");
     }
 }
