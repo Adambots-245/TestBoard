@@ -63,16 +63,19 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     private void configureMotors() {
+            
         leftFlywheel.configure()
             .pid(ShooterTestConstants.kFlywheelP, ShooterTestConstants.kFlywheelI,
                  ShooterTestConstants.kFlywheelD, ShooterTestConstants.kFlywheelFF)
             .brakeMode(false)  // coast for flywheels
+            .inverted(true)
             .currentLimits(ShooterTestConstants.kFlywheelStallCurrentLimit,
                            ShooterTestConstants.kFlywheelFreeCurrentLimit, 3000)
             .apply();
-
-        rightFlywheel.setStrictFollower(RobotMap.kShooterLeftPort, true);
-        rightFlywheel.setBrakeMode(false);
+        
+        // leftFlywheel.setInverted(true);
+            rightFlywheel.setStrictFollower(RobotMap.kShooterLeftPort, true);
+            rightFlywheel.setBrakeMode(false);
 
         turretMotor.configure()
             .pid(ShooterTestConstants.kTurretP, ShooterTestConstants.kTurretI,

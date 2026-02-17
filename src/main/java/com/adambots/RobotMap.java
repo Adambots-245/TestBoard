@@ -24,8 +24,8 @@ public class RobotMap {
     // Shooter Prototype
     public static final int kShooterLeftPort = 21;   // Kraken X60
     public static final int kShooterRightPort = 22;  // Kraken X60 (follower)
-    public static final int kTurretPort = 25;        // Minion (WCP GreyT Turret)
-    public static final int kUptakePort = 11;        // Kraken X44
+    public static final int kTurretPort = 51;        // Minion (WCP GreyT Turret)
+    public static final int kUptakePort = 20;        // Kraken X44
 
     // ==================== Motor Instances ====================
     // Using BaseMotor allows easy swap between motor types (TalonFX, NEO, etc.)
