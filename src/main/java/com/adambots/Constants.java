@@ -59,13 +59,13 @@ public final class Constants {
         public static final double kMinDegrees = 0.0;
         public static final double kMaxDegrees = 90;
 
-        public static final double kUpperLimit = -7.0; //(kMaxDegrees / 360.0) * kIntakeArmMotorRatio;
+        public static final double kUpperLimit = -6; //(kMaxDegrees / 360.0) * kIntakeArmMotorRatio;
         public static final double kLowerLimit = 0; //(kMinDegrees / 360.0) * kIntakeArmMotorRatio;
 
-        public static final int kStall = 20;
+        public static final int kStall = 25;
         public static final int kRPM = 3200;
 
-        public static final int kLimitSwitchPort = 0; // DIO port for arm limit switch
+        public static final int kLimitSwitchPort = 3; // DIO port for arm limit switch
     }
 
     // ==================== Add Your Constants Here ====================

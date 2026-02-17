@@ -61,7 +61,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
     private void configureLimitSwitch() {
         // DIO returns false when switch is closed/triggered
-        new Trigger(() -> !limitSwitch.get())
+        new Trigger(() -> limitSwitch.get())
             .onTrue(Commands.runOnce(() -> {
                 stopIntakeArm();
                 intakeArmMotor.setPosition(IntakeConstants.kUpperLimit);
@@ -140,6 +140,7 @@ public class IntakeSubsystem extends SubsystemBase {
      * Stop the intake arm motor.
      */
     public void stopIntakeArm() {
+        System.out.println("Stopped Intake Arm.");
         positionControlActive = false;
         intakeArmMotor.set(0);
     }
@@ -230,7 +231,15 @@ public class IntakeSubsystem extends SubsystemBase {
             double currentPosition = intakeArmMotor.getPosition();
             double pidOutput = armPID.calculate(currentPosition, targetPosition);
             double gravityFF = calculateGravityFF();
+            double outputWithFF = pidOutput;
+            if (targetPosition == IntakeConstants.kUpperLimit){
+                outputWithFF = pidOutput + gravityFF;
+            } //else {
+            //     outputWithFF = pidOutput - gravityFF;
+            // }
             double output = MathUtil.clamp(pidOutput + gravityFF, -1.0, 1.0);
+            System.out.println("PID + FF OUTPUT: " + outputWithFF);
+            System.out.println("Target Position: " + targetPosition);
             intakeArmMotor.set(output);
         }
 
