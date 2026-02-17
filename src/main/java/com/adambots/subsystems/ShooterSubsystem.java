@@ -68,7 +68,7 @@ public class ShooterSubsystem extends SubsystemBase {
             .pid(ShooterTestConstants.kFlywheelP, ShooterTestConstants.kFlywheelI,
                  ShooterTestConstants.kFlywheelD, ShooterTestConstants.kFlywheelFF)
             .brakeMode(false)  // coast for flywheels
-            // .inverted(true)
+            .inverted(true)
             .currentLimits(ShooterTestConstants.kFlywheelStallCurrentLimit,
                            ShooterTestConstants.kFlywheelFreeCurrentLimit, 3000)
             .apply();
@@ -110,36 +110,74 @@ public class ShooterSubsystem extends SubsystemBase {
     /**
      * Registers flywheel tunable GenericEntry fields on the current Dash tab.
      * Call after Dash.useTab() in RobotContainer.
+     * @param pos position tracker {col, row}, updated in place
+     * @param cols max columns per row before wrapping
      */
-    public void setupFlywheelTunables() {
-        flywheelPEntry = Dash.addTunable("Flywheel kP", ShooterTestConstants.kFlywheelP);
-        flywheelIEntry = Dash.addTunable("Flywheel kI", ShooterTestConstants.kFlywheelI);
-        flywheelDEntry = Dash.addTunable("Flywheel kD", ShooterTestConstants.kFlywheelD);
-        flywheelFFEntry = Dash.addTunable("Flywheel kF", ShooterTestConstants.kFlywheelFF);
-        // Distance = floor measurement from shooter exit point to the AprilTag on the hub face.
-        // Be consistent -- always measure to the AprilTag so table entries are repeatable.
-        targetDistanceEntry = Dash.addTunable("Target Distance (m)", 3.0);
-        flywheelToleranceEntry = Dash.addTunable("Flywheel Tolerance (RPS)", ShooterTestConstants.kFlywheelToleranceRPS);
-        exitVelocityMultiplierEntry = Dash.addTunable("Exit Vel Multiplier", ShooterTestConstants.kExitVelocityMultiplier);
-        exitHeightEntry = Dash.addTunable("Exit Height (m)", ShooterTestConstants.kExitHeightMeters);
+    public void setupFlywheelTunables(int[] pos, int cols) {
+        flywheelPEntry = Dash.addTunable("Flywheel kP", ShooterTestConstants.kFlywheelP, pos[0], pos[1]);
+        advance(pos, cols);
+        flywheelIEntry = Dash.addTunable("Flywheel kI", ShooterTestConstants.kFlywheelI, pos[0], pos[1]);
+        advance(pos, cols);
+        flywheelDEntry = Dash.addTunable("Flywheel kD", ShooterTestConstants.kFlywheelD, pos[0], pos[1]);
+        advance(pos, cols);
+        flywheelFFEntry = Dash.addTunable("Flywheel kF", ShooterTestConstants.kFlywheelFF, pos[0], pos[1]);
+        advance(pos, cols);
+        targetDistanceEntry = Dash.addTunable("Target Distance (m)", 3.0, pos[0], pos[1]);
+        advance(pos, cols);
+        flywheelToleranceEntry = Dash.addTunable("Flywheel Tolerance (RPS)", ShooterTestConstants.kFlywheelToleranceRPS, pos[0], pos[1]);
+        advance(pos, cols);
+        exitVelocityMultiplierEntry = Dash.addTunable("Exit Vel Multiplier", ShooterTestConstants.kExitVelocityMultiplier, pos[0], pos[1]);
+        advance(pos, cols);
+        exitHeightEntry = Dash.addTunable("Exit Height (m)", ShooterTestConstants.kExitHeightMeters, pos[0], pos[1]);
+        advance(pos, cols);
 
+        // Table distances in one row, RPS values directly below
+        newRow(pos);
         for (int i = 0; i < 5; i++) {
             tableDistanceEntries[i] = Dash.addTunable(
-                "Table Dist " + (i + 1), ShooterTestConstants.kDefaultInterpolationTable[i][0]);
+                "Table Dist " + (i + 1), ShooterTestConstants.kDefaultInterpolationTable[i][0], pos[0], pos[1]);
+            advance(pos, cols);
+        }
+        newRow(pos);
+        for (int i = 0; i < 5; i++) {
             tableRPSEntries[i] = Dash.addTunable(
-                "Table RPS " + (i + 1), ShooterTestConstants.kDefaultInterpolationTable[i][1]);
+                "Table RPS " + (i + 1), ShooterTestConstants.kDefaultInterpolationTable[i][1], pos[0], pos[1]);
+            advance(pos, cols);
         }
     }
 
     /**
      * Registers turret tunable GenericEntry fields on the current Dash tab.
      * Call after Dash.useTab() in RobotContainer.
+     * @param pos position tracker {col, row}, updated in place
+     * @param cols max columns per row before wrapping
      */
-    public void setupTurretTunables() {
-        turretPEntry = Dash.addTunable("Turret kP", ShooterTestConstants.kTurretP);
-        turretIEntry = Dash.addTunable("Turret kI", ShooterTestConstants.kTurretI);
-        turretDEntry = Dash.addTunable("Turret kD", ShooterTestConstants.kTurretD);
-        turretAngleEntry = Dash.addTunable("Turret Angle (deg)", 90.0);
+    public void setupTurretTunables(int[] pos, int cols) {
+        turretPEntry = Dash.addTunable("Turret kP", ShooterTestConstants.kTurretP, pos[0], pos[1]);
+        advance(pos, cols);
+        turretIEntry = Dash.addTunable("Turret kI", ShooterTestConstants.kTurretI, pos[0], pos[1]);
+        advance(pos, cols);
+        turretDEntry = Dash.addTunable("Turret kD", ShooterTestConstants.kTurretD, pos[0], pos[1]);
+        advance(pos, cols);
+        turretAngleEntry = Dash.addTunable("Turret Angle (deg)", 90.0, pos[0], pos[1]);
+        advance(pos, cols);
+    }
+
+    /** Advances the grid position tracker, wrapping to the next row when needed. */
+    private static void advance(int[] pos, int cols) {
+        pos[0]++;
+        if (pos[0] >= cols) {
+            pos[0] = 0;
+            pos[1]++;
+        }
+    }
+
+    /** Jumps to column 0 of the next row (no-op if already at column 0). */
+    private static void newRow(int[] pos) {
+        if (pos[0] != 0) {
+            pos[0] = 0;
+            pos[1]++;
+        }
     }
 
     // ==================== Flywheel Control ====================
