@@ -61,11 +61,12 @@ public class IntakeSubsystem extends SubsystemBase {
 
     private void configureLimitSwitch() {
         // DIO returns false when switch is closed/triggered
+        // No subsystem requirement so this always runs, even if another command holds the subsystem
         new Trigger(() -> limitSwitch.get())
             .onTrue(Commands.runOnce(() -> {
                 stopIntakeArm();
                 intakeArmMotor.setPosition(IntakeConstants.kUpperLimit);
-            }, this).ignoringDisable(true));
+            }).ignoringDisable(true));
     }
 
     private void setupDash() {
