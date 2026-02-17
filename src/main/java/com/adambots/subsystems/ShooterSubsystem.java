@@ -68,7 +68,7 @@ public class ShooterSubsystem extends SubsystemBase {
             .pid(ShooterTestConstants.kFlywheelP, ShooterTestConstants.kFlywheelI,
                  ShooterTestConstants.kFlywheelD, ShooterTestConstants.kFlywheelFF)
             .brakeMode(false)  // coast for flywheels
-            .inverted(true)
+            // .inverted(true)
             .currentLimits(ShooterTestConstants.kFlywheelStallCurrentLimit,
                            ShooterTestConstants.kFlywheelFreeCurrentLimit, 3000)
             .apply();
@@ -108,24 +108,20 @@ public class ShooterSubsystem extends SubsystemBase {
     // ==================== Tunable Setup ====================
 
     /**
-     * Registers all tunable GenericEntry fields on the current Dash tab.
+     * Registers flywheel tunable GenericEntry fields on the current Dash tab.
      * Call after Dash.useTab() in RobotContainer.
      */
-    public void setupTunables() {
+    public void setupFlywheelTunables() {
         flywheelPEntry = Dash.addTunable("Flywheel kP", ShooterTestConstants.kFlywheelP);
         flywheelIEntry = Dash.addTunable("Flywheel kI", ShooterTestConstants.kFlywheelI);
         flywheelDEntry = Dash.addTunable("Flywheel kD", ShooterTestConstants.kFlywheelD);
         flywheelFFEntry = Dash.addTunable("Flywheel kF", ShooterTestConstants.kFlywheelFF);
-        turretPEntry = Dash.addTunable("Turret kP", ShooterTestConstants.kTurretP);
-        turretIEntry = Dash.addTunable("Turret kI", ShooterTestConstants.kTurretI);
-        turretDEntry = Dash.addTunable("Turret kD", ShooterTestConstants.kTurretD);
         // Distance = floor measurement from shooter exit point to the AprilTag on the hub face.
         // Be consistent -- always measure to the AprilTag so table entries are repeatable.
         targetDistanceEntry = Dash.addTunable("Target Distance (m)", 3.0);
         flywheelToleranceEntry = Dash.addTunable("Flywheel Tolerance (RPS)", ShooterTestConstants.kFlywheelToleranceRPS);
         exitVelocityMultiplierEntry = Dash.addTunable("Exit Vel Multiplier", ShooterTestConstants.kExitVelocityMultiplier);
         exitHeightEntry = Dash.addTunable("Exit Height (m)", ShooterTestConstants.kExitHeightMeters);
-        turretAngleEntry = Dash.addTunable("Turret Angle (deg)", 90.0);
 
         for (int i = 0; i < 5; i++) {
             tableDistanceEntries[i] = Dash.addTunable(
@@ -135,11 +131,22 @@ public class ShooterSubsystem extends SubsystemBase {
         }
     }
 
+    /**
+     * Registers turret tunable GenericEntry fields on the current Dash tab.
+     * Call after Dash.useTab() in RobotContainer.
+     */
+    public void setupTurretTunables() {
+        turretPEntry = Dash.addTunable("Turret kP", ShooterTestConstants.kTurretP);
+        turretIEntry = Dash.addTunable("Turret kI", ShooterTestConstants.kTurretI);
+        turretDEntry = Dash.addTunable("Turret kD", ShooterTestConstants.kTurretD);
+        turretAngleEntry = Dash.addTunable("Turret Angle (deg)", 90.0);
+    }
+
     // ==================== Flywheel Control ====================
 
     public void setFlywheelRPS(double rps) {
         targetRPS = rps;
-        leftFlywheel.set(ControlMode.VELOCITY, rps);
+        leftFlywheel.set(ControlMode.VELOCITY, rps * ShooterTestConstants.kFlywheelDirection);
     }
 
     public void stopFlywheel() {
@@ -241,7 +248,7 @@ public class ShooterSubsystem extends SubsystemBase {
         double tolerance = (flywheelToleranceEntry != null)
             ? flywheelToleranceEntry.getDouble(ShooterTestConstants.kFlywheelToleranceRPS)
             : ShooterTestConstants.kFlywheelToleranceRPS;
-        return targetRPS > 0 && Math.abs(getLeftRPS() - targetRPS) < tolerance;
+        return targetRPS > 0 && Math.abs(Math.abs(getLeftRPS()) - targetRPS) < tolerance;
     }
 
     public boolean isUsingInterpolationMode() {
@@ -346,6 +353,23 @@ public class ShooterSubsystem extends SubsystemBase {
             .withName("Toggle Mode");
     }
 
+    // ==================== Debug Commands ====================
+
+    public Command openLoopForwardCommand() {
+        return runEnd(() -> leftFlywheel.set(0.5), this::stopFlywheel)
+            .withName("Open Loop +50%");
+    }
+
+    public Command openLoopReverseCommand() {
+        return runEnd(() -> leftFlywheel.set(-0.5), this::stopFlywheel)
+            .withName("Open Loop -50%");
+    }
+
+    public Command spinNegativeCommand(double rps) {
+        return runEnd(() -> setFlywheelRPS(-rps), this::stopFlywheel)
+            .withName("Spin -" + rps + " RPS");
+    }
+
     // ==================== Backward-Compatible Wrappers (for ShootCommand.java) ====================
 
     public Command runShooterCommand() {
@@ -353,7 +377,7 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public Command reverseShooterCommand() {
-        return runEnd(() -> leftFlywheel.set(-0.5), this::stopFlywheel)
+        return runEnd(() -> leftFlywheel.set(0.5 * ShooterTestConstants.kFlywheelDirection), this::stopFlywheel)
             .withName("Reverse Shooter");
     }
 

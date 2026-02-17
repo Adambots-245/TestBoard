@@ -22,6 +22,9 @@ public final class Constants {
         public static final double kMotorFreeSpeedRPS = 100.0;
         public static final double kNominalVoltage = 12.0;
 
+        // Set to -1.0 to reverse flywheel direction (workaround for setInverted issue)
+        public static final double kFlywheelDirection = -1.0;
+
         // ==================== Flywheel PID Defaults ====================
         public static final double kFlywheelP = 0.1;
         public static final double kFlywheelI = 0;

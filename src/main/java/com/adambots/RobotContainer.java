@@ -42,34 +42,49 @@ public class RobotContainer {
      * Tabs persist between runs - just rearrange widgets as needed.
      */
     private void setupDashboard() {
-        // ==================== Shooter Test Tab (via Dash) ====================
-        Dash.useTab("Shooter Test");
-        shooter.setupTunables();  // registers all tunable GenericEntry fields
+        // ==================== Flywheel Tab (via Dash) ====================
+        Dash.useTab("Flywheel");
+        shooter.setupFlywheelTunables();
 
-        // Telemetry (auto-updating)
+        // Telemetry
         Dash.add("Left RPS", shooter::getLeftRPS);
         Dash.add("Right RPS", shooter::getRightRPS);
         Dash.add("Target RPS", shooter::getTargetRPS);
-        Dash.add("Turret Angle", shooter::getTurretAngleDegrees);
         Dash.add("At Speed", shooter::isAtSpeed);
         Dash.add("Mode", () -> shooter.isUsingInterpolationMode() ? "TABLE" : "CALCULATOR");
         Dash.add("Table RPS", () -> shooter.getRPSFromTable(shooter.getTunableDistance()));
         Dash.add("Calc RPS", () -> shooter.getRPSFromCalculator(shooter.getTunableDistance()));
         Dash.add("Flywheel Amps", () -> RobotMap.shooterLeftMotor.getCurrentDraw().in(Amps));
-        Dash.add("Turret Amps", () -> RobotMap.turretMotor.getCurrentDraw().in(Amps));
         Dash.add("Flywheel Temp", () -> RobotMap.shooterLeftMotor.getTemperature());
+        Dash.add("Duty Cycle", () -> RobotMap.shooterLeftMotor.getOutputPercent());
+        Dash.add("Left Position", () -> RobotMap.shooterLeftMotor.getPosition());
 
         // Commands
         Dash.addCommand("Spin 50 RPS", shooter.spinUpCommand(50));
         Dash.addCommand("Spin 75 RPS", shooter.spinUpCommand(75));
         Dash.addCommand("Spin For Distance", shooter.spinForDistanceCommand());
         Dash.addCommand("Stop Flywheel", shooter.stopFlywheelCommand());
+        Dash.addCommand("Toggle Mode", shooter.toggleModeCommand());
+
+        // Debug commands
+        Dash.addCommand("Open Loop +50%", shooter.openLoopForwardCommand());
+        Dash.addCommand("Open Loop -50%", shooter.openLoopReverseCommand());
+        Dash.addCommand("Spin -75 RPS", shooter.spinNegativeCommand(75));
+
+        // ==================== Turret Tab (via Dash) ====================
+        Dash.useTab("Turret");
+        shooter.setupTurretTunables();
+
+        // Telemetry
+        Dash.add("Turret Angle", shooter::getTurretAngleDegrees);
+        Dash.add("Turret Amps", () -> RobotMap.turretMotor.getCurrentDraw().in(Amps));
+
+        // Commands
         Dash.addCommand("Turret 0 deg", shooter.aimTurretCommand(0));
         Dash.addCommand("Turret 90 deg", shooter.aimTurretCommand(90));
         Dash.addCommand("Turret 180 deg", shooter.aimTurretCommand(180));
         Dash.addCommand("Aim Turret Manual", shooter.aimTurretManualCommand());
         Dash.addCommand("Stop Turret", shooter.stopTurretCommand());
-        Dash.addCommand("Toggle Mode", shooter.toggleModeCommand());
 
         // ==================== Uptake Tab (via Dash) ====================
         Dash.useTab("Uptake");
