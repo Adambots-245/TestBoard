@@ -1,14 +1,9 @@
 package com.adambots;
 
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 
-import com.adambots.commands.ShootCommand;
-import com.adambots.subsystems.HopperSubsystem;
 import com.adambots.subsystems.IntakeSubsystem;
-import com.adambots.subsystems.ShooterSubsystem;
 
 /**
  * RobotContainer for TestBoard - a subsystem testing platform.

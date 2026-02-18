@@ -17,15 +17,30 @@ output = kP * error + kD * d(error)/dt + kG * cos(arm_angle) + kS * sign(velocit
 ## Prerequisites
 
 1. Deploy the code to the robot
-2. Open Shuffleboard and find the tunable entries:
-   - `IntakeArm kP`, `IntakeArm kI`, `IntakeArm kD`
-   - `IntakeArm kG`, `IntakeArm kS`, `IntakeArm kV`, `IntakeArm kA`
+2. Open Shuffleboard and navigate to the **Intake** tab. All widgets are organized in rows:
+   - **Row 0 — Telemetry:** Roller Speed, Roller Position, Arm Speed, Arm Position, Arm Target, Raised Position, Limit Switch, Sim Voltage, Sim Angle Deg
+   - **Row 1 — Commands:** Start Intake, Reverse Intake, Stop Intake, Lower Arm, Raise Arm, Stop Arm, Reset Position
+   - **Row 2 — Tunables:** kP, kI, kD, kG, kS, kV, kA, Zero Tunables, Reset Tunables
 3. Ensure the limit switch is working (verify `Limit Switch` widget toggles when pressed)
 4. Reset the arm position with "Reset Position" button
+
+## Simulation
+
+You can practice the full tuning workflow in sim before touching hardware:
+
+1. Run `./gradlew simulateJava`
+2. In Glass, enable teleop from the sim DriverStation
+3. Open Shuffleboard and navigate to the **Intake** tab
+4. The **Mechanism2d** visualization ("Intake Arm Sim" in SmartDashboard) shows a yellow arm that responds to gravity and commands
+5. Click **Zero Tunables** and follow the tuning order below — watch the arm droop, hold, and track positions
+
+The tuning workflow is identical to real hardware. Gain values won't transfer directly (different motor model, estimated gear ratio), but the process and behavior are the same.
 
 ## Tuning Order
 
 **Always tune in this order.** Each gain builds on the previous.
+
+Use **Zero Tunables** to start from scratch, **Reset Tunables** to restore code constants.
 
 ### Step 1: Find kG (Gravity Compensation)
 
@@ -136,3 +151,90 @@ public static final double kArmKG = <your value>;
 ```
 
 Redeploy to lock in the values.
+
+## Gear Ratio Calibration
+
+The gear ratio (`kArmTotalGearRatio`) is a two-stage reduction: planetary gearbox × belt drive. It must be set correctly for `Arm_Cosine` gravity compensation to work — the cosine must cycle once per arm revolution, not once per motor revolution.
+
+### Method 1: Calculate from specs
+
+Get these from the mechanical team:
+- **Planetary ratio** — stamped on the gearbox or in its datasheet (e.g., 5:1)
+- **Belt/pulley ratio** — count teeth on both pulleys: `motor-side teeth ÷ arm-side teeth` (e.g., 18T driving 36T = 2:1)
+- **Total** = planetary × belt (e.g., 5 × 5.6 = 28:1)
+
+### Method 2: Measure empirically
+
+This catches assembly mistakes (wrong pulley, wrong gearbox stage, etc.). **Always verify with this method.**
+
+1. Deploy with `kArmTotalGearRatio = 1.0` (so position reports raw motor rotations)
+2. Move the arm to the lowered (horizontal) position
+3. Click **Reset Position** to zero the encoder
+4. Physically rotate the arm exactly **90°** (use a protractor or square)
+5. Read **Arm Position** from the Intake tab
+6. Gear ratio = `|position reading| / 0.25`
+
+Example: position reads -7.0 → gear ratio = 7.0 / 0.25 = **28:1**
+
+### After updating the gear ratio
+
+Once you set `kArmTotalGearRatio` to the real value (e.g., 28.0), `getPosition()` reports **mechanism rotations** instead of motor rotations. Position targets must be recalibrated:
+
+1. Update `kArmPlanetaryRatio` and `kArmBeltRatio` in `Constants.java`
+2. Redeploy
+3. Move arm to the lowered (horizontal) position
+4. Click **Reset Position** to zero the encoder
+5. Move arm to the raised (90°) position
+6. Read **Arm Position** — this is the new `kArmRaisedPosition` (should be approximately -0.25)
+7. Update `kArmRaisedPosition` and `kArmLoweredPosition` in `Constants.java`
+8. Also update `SimConstants.kSimGearRatio` to match the real gear ratio
+9. Redeploy and re-tune PID gains (they may need adjustment for the new position scale)
+
+## Visualizing with AdvantageScope
+
+AdvantageScope can plot telemetry over time, which is essential for evaluating motion profile quality and tuning.
+
+### Setup
+
+1. Open AdvantageScope
+2. Connect to `localhost:1735` (sim) or the robot's IP address
+3. In the left sidebar, expand **Shuffleboard > Intake** to find telemetry values
+4. Create a **Line Graph** tab
+
+### Recommended plots
+
+**Position tracking (most important):**
+- **Left axis:** Arm Position, Arm Target
+- Shows how well the arm tracks the commanded position
+- The gap between the two curves is your position error
+
+**Motion profile shape:**
+- **Left axis:** Arm Position
+- **Right axis:** Arm Speed
+- During a Raise/Lower command, the velocity trace reveals the profile shape:
+  - **Trapezoidal** (kArmJerk = 0): ramp up → flat cruise → ramp down
+  - **S-curve** (kArmJerk > 0): smooth ramp up → cruise → smooth ramp down
+- Note: the sim uses a simple PD+kG model, so the trapezoidal profile is only visible on real hardware where CTRE Motion Magic generates the trajectory
+
+**Motor effort:**
+- **Left axis:** Sim Voltage (sim) or motor output (real hardware)
+- Should spike at the start of a move and settle to a steady kG value when holding
+- Sustained saturation at ±12V means the move is too aggressive for the motor
+
+### What to look for
+
+| Observation | Meaning | Fix |
+|-------------|---------|-----|
+| Position reaches target with no overshoot | Well-tuned | None needed |
+| Position overshoots then rings | kP too high or kD too low | Reduce kP or increase kD |
+| Position undershoots (never reaches target) | kP too low or kS too low | Increase kP or kS |
+| Velocity curve is jagged/spiky | Oscillation or noise | Increase kD, reduce kP |
+| Velocity curve is smooth bell/trapezoid | Good Motion Magic profile | None needed |
+| Voltage saturated at ±12V for extended time | Move too aggressive | Reduce cruise velocity or acceleration |
+
+### Phoenix Tuner X (real hardware only)
+
+For deeper Motion Magic analysis, Phoenix Tuner X plots CTRE's internal signals:
+- **ClosedLoopReference** — the position the profile is targeting at each instant
+- **ClosedLoopOutput** — the PID + feedforward output
+- These internal signals are not available through NetworkTables

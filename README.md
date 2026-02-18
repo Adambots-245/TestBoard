@@ -8,10 +8,12 @@ This project is designed for students to test subsystems independently, without 
 
 ## Current Subsystems
 
-### Shooter
-- **Left Motor** (CAN 21): Kraken X60 - Leader
-- **Right Motor** (CAN 22): Kraken X60 - Follower (opposed direction)
-- **Uptake Motor** (CAN 20): Kraken X44
+### Intake
+- **Roller Motor** (CAN 33): Kraken X44
+- **Arm Motor** (CAN 32): Minion (TalonFXS) — Motion Magic with Arm_Cosine gravity compensation
+- **Limit Switch** (DIO 0): Arm home position
+- **Simulation**: Mechanism2d visualization with SingleJointedArmSim gravity physics
+- See [Intake Arm Tuning Guide](docs/intake-arm-tuning.md) for PID tuning, gear ratio calibration, and AdvantageScope visualization
 
 ## How to Add a New Subsystem
 
@@ -37,12 +39,18 @@ This project is designed for students to test subsystems independently, without 
    - Instantiate your subsystem
    - Add commands to SmartDashboard
 
-## Running Tests
+## Running
 
+### On hardware
 1. Deploy code to the RoboRIO
-2. Open Shuffleboard
-3. Find your commands under the subsystem name (e.g., "Shooter/Run Shooter")
-4. Click the command button to run it
+2. Open Shuffleboard and navigate to the **Intake** tab
+3. Click command buttons to control the subsystem
+
+### In simulation
+1. Run `./gradlew simulateJava`
+2. In Glass, enable teleop from the sim DriverStation
+3. Open Shuffleboard — the **Intake** tab has all telemetry, commands, and tunables
+4. The **Mechanism2d** widget ("Intake Arm Sim") shows the arm responding to gravity and commands
 
 ## Project Structure
 
@@ -52,7 +60,12 @@ src/main/java/com/adambots/
 ├── Robot.java          # Robot lifecycle
 ├── RobotContainer.java # Subsystem setup & dashboard commands
 ├── RobotMap.java       # CAN IDs and port assignments
-├── Constants.java      # Subsystem constants
+├── Constants.java      # Subsystem constants (IntakeConstants, SimConstants)
 └── subsystems/
-    └── ShooterSubsystem.java
+    └── IntakeSubsystem.java  # Intake roller + arm with sim support
+```
+
+```
+docs/
+└── intake-arm-tuning.md  # PID tuning, gear ratio calibration, AdvantageScope
 ```
