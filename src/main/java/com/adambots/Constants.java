@@ -2,6 +2,9 @@ package com.adambots;
 
 import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.units.measure.*;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
 
 /**
  * Constants for TestBoard subsystem testing platform.
@@ -102,6 +105,35 @@ public final class Constants {
 
         // Current limit
         public static final Current kUptakeCurrentLimit = Amps.of(40);
+    }
+
+    /**
+     * Vision constants for PhotonVision AprilTag tracking.
+     */
+    public static final class VisionConstants {
+        public static final String kCameraName = "OrangePi";  // must match PhotonVision config
+
+        // Camera mount — measure from turret pivot to camera lens
+        public static final double kCameraForwardOffsetMeters = 0.15;  // TODO: measure
+        public static final double kCameraHeightMeters = 0.5;           // TODO: measure
+        public static final double kCameraPitchRadians = Math.toRadians(0);
+
+        // Camera-to-robot transform (for pose estimator)
+        // X = forward, Y = left, Z = up from robot center
+        public static final Transform3d kRobotToCamera = new Transform3d(
+            new Translation3d(kCameraForwardOffsetMeters, 0, kCameraHeightMeters),
+            new Rotation3d(0, kCameraPitchRadians, 0));
+
+        // Hub tag IDs by alliance (WPILib origin is at blue wall; red hub is near red wall at X≈16.5m)
+        public static final int[] kBlueHubTagIds = {18, 19, 20, 21, 24, 25, 26, 27};
+        public static final int[] kRedHubTagIds  = {2, 3, 4, 5, 8, 9, 10, 11};
+
+        // Filtering
+        public static final double kMaxAmbiguity = 0.2;
+        public static final double kMaxDistanceMeters = 8.0;
+
+        // Turret auto-aim tolerance
+        public static final double kAimToleranceDegrees = 2.0;
     }
 
     // ==================== Add Your Constants Here ====================

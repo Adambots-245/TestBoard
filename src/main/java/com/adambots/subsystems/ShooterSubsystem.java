@@ -298,6 +298,18 @@ public class ShooterSubsystem extends SubsystemBase {
             ? targetDistanceEntry.getDouble(3.0) : 3.0;
     }
 
+    // ==================== Vision Integration ====================
+
+    /**
+     * Programmatically sets the tunable distance entry so vision-computed distance
+     * feeds into the existing interpolation table pipeline.
+     */
+    public void setTunableDistance(double meters) {
+        if (targetDistanceEntry != null) {
+            targetDistanceEntry.setDouble(meters);
+        }
+    }
+
     // ==================== Periodic ====================
 
     @Override

@@ -2,13 +2,21 @@ package com.adambots;
 
 import static edu.wpi.first.units.Units.*;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.networktables.GenericEntry;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 
 import com.adambots.commands.ShootCommand;
 import com.adambots.lib.utils.Dash;
+import com.adambots.lib.utils.Utils;
 import com.adambots.subsystems.ShooterSubsystem;
 import com.adambots.subsystems.UptakeSubsystem;
+import com.adambots.subsystems.VisionSubsystem;
 
 /**
  * RobotContainer for TestBoard - a subsystem testing platform.
@@ -27,11 +35,19 @@ public class RobotContainer {
     // ==================== Subsystems ====================
     private final ShooterSubsystem shooter;
     private final UptakeSubsystem uptake;
+    private final VisionSubsystem vision;
+
+    // Sim-only tunables (Vision tab)
+    private GenericEntry simXEntry;
+    private GenericEntry simYEntry;
+    private GenericEntry simHeadingEntry;
+    private Field2d field;
 
     public RobotContainer() {
         // Initialize subsystems with motors from RobotMap
         shooter = new ShooterSubsystem(RobotMap.shooterLeftMotor, RobotMap.shooterRightMotor, RobotMap.turretMotor);
         uptake = new UptakeSubsystem(RobotMap.uptakeMotor);
+        vision = new VisionSubsystem();
 
         // Setup Shuffleboard tabs with commands
         setupDashboard();
@@ -48,6 +64,7 @@ public class RobotContainer {
         setupFlywheelTab(COLS);
         setupTurretTab(COLS);
         setupUptakeTab(COLS);
+        setupVisionTab(COLS);
     }
 
     private void setupFlywheelTab(int cols) {
@@ -156,6 +173,104 @@ public class RobotContainer {
         advance(pos, cols);
     }
 
+    private void setupVisionTab(int cols) {
+        Dash.useTab("Vision");
+        int[] pos = {0, 0};
+
+        // --- Row 0: Telemetry (both approaches side by side) ---
+        Dash.add("Cam Distance", vision::getCamDistance, pos[0], pos[1]);
+        advance(pos, cols);
+        Dash.add("Cam Angle", vision::getCamAngle, pos[0], pos[1]);
+        advance(pos, cols);
+        Dash.add("Cam Target", vision::camHasTarget, pos[0], pos[1]);
+        advance(pos, cols);
+        Dash.add("Pose Distance", vision::getPoseDistance, pos[0], pos[1]);
+        advance(pos, cols);
+        Dash.add("Pose Angle", vision::getPoseAngle, pos[0], pos[1]);
+        advance(pos, cols);
+        Dash.add("Pose Target", vision::poseHasTarget, pos[0], pos[1]);
+        advance(pos, cols);
+        Dash.add("Tags", vision::getVisibleTagCount, pos[0], pos[1]);
+        advance(pos, cols);
+        Dash.add("Alliance", vision::getAllianceColor, pos[0], pos[1]);
+        advance(pos, cols);
+
+        // --- Row 1: Approach A Commands (Camera-Only) ---
+        newRow(pos);
+        Dash.addCommand("A: Set Distance",
+            Commands.runOnce(() -> {
+                if (vision.camHasTarget()) shooter.setTunableDistance(vision.getCamDistance());
+            }).withName("A: Set Distance"),
+            pos[0], pos[1]);
+        advance(pos, cols);
+
+        Dash.addCommand("A: Aim Turret",
+            Commands.run(() -> {
+                if (vision.camHasTarget()) {
+                    shooter.setTurretAngle(shooter.getTurretAngleDegrees() + vision.getCamAngle());
+                }
+            }).withName("A: Aim Turret"),
+            pos[0], pos[1]);
+        advance(pos, cols);
+
+        Dash.addCommand("A: Set + Aim",
+            Commands.run(() -> {
+                if (vision.camHasTarget()) {
+                    shooter.setTunableDistance(vision.getCamDistance());
+                    shooter.setTurretAngle(shooter.getTurretAngleDegrees() + vision.getCamAngle());
+                }
+            }).withName("A: Set + Aim"),
+            pos[0], pos[1]);
+        advance(pos, cols);
+
+        // --- Row 2: Approach B Commands (Pose-Based) ---
+        newRow(pos);
+        Dash.addCommand("B: Set Distance",
+            Commands.runOnce(() -> {
+                if (vision.poseHasTarget()) shooter.setTunableDistance(vision.getPoseDistance());
+            }).withName("B: Set Distance"),
+            pos[0], pos[1]);
+        advance(pos, cols);
+
+        Dash.addCommand("B: Aim Turret",
+            Commands.run(() -> {
+                if (vision.poseHasTarget()) {
+                    shooter.setTurretAngle(vision.getPoseAngle());
+                }
+            }).withName("B: Aim Turret"),
+            pos[0], pos[1]);
+        advance(pos, cols);
+
+        Dash.addCommand("B: Set + Aim",
+            Commands.run(() -> {
+                if (vision.poseHasTarget()) {
+                    shooter.setTunableDistance(vision.getPoseDistance());
+                    shooter.setTurretAngle(vision.getPoseAngle());
+                }
+            }).withName("B: Set + Aim"),
+            pos[0], pos[1]);
+        advance(pos, cols);
+
+        // --- Row 3: Sim Tunables (only meaningful in simulation) ---
+        if (Robot.isSimulation()) {
+            newRow(pos);
+            simXEntry = Dash.addTunable("Sim X (m)", 14.0, pos[0], pos[1]);
+            advance(pos, cols);
+            simYEntry = Dash.addTunable("Sim Y (m)", 4.0, pos[0], pos[1]);
+            advance(pos, cols);
+            simHeadingEntry = Dash.addTunable("Sim Heading (deg)", 180.0, pos[0], pos[1]);
+            advance(pos, cols);
+            Dash.add("Expected Dist", this::getExpectedDistance, pos[0], pos[1]);
+            advance(pos, cols);
+            Dash.add("Expected Angle", this::getExpectedAngle, pos[0], pos[1]);
+            advance(pos, cols);
+
+            // Field2d visualization — hub center is updated each cycle in simulationPeriodic()
+            field = new Field2d();
+            SmartDashboard.putData("Field", field);
+        }
+    }
+
     // ==================== Grid Layout Helpers ====================
 
     /** Advances to the next column, wrapping to a new row when cols is exceeded. */
@@ -173,6 +288,38 @@ public class RobotContainer {
             pos[0] = 0;
             pos[1]++;
         }
+    }
+
+    // ==================== Simulation Support ====================
+
+    private Pose2d getSimPose() {
+        return new Pose2d(
+            simXEntry.getDouble(0),
+            simYEntry.getDouble(0),
+            Rotation2d.fromDegrees(simHeadingEntry.getDouble(180)));
+    }
+
+    private double getExpectedDistance() {
+        Pose2d simPose = getSimPose();
+        Translation2d hubCenter = vision.getHubCenter();
+        return simPose.getTranslation().getDistance(hubCenter);
+    }
+
+    private double getExpectedAngle() {
+        Pose2d simPose = getSimPose();
+        Translation2d hubCenter = vision.getHubCenter();
+        double angleToHub = Math.atan2(
+            hubCenter.getY() - simPose.getY(),
+            hubCenter.getX() - simPose.getX());
+        return Utils.wrapAngleDeg(
+            Math.toDegrees(angleToHub - simPose.getRotation().getRadians()));
+    }
+
+    public void simulationPeriodic() {
+        Pose2d simPose = getSimPose();
+        vision.simulationPeriodic(simPose);
+        field.setRobotPose(simPose);
+        field.getObject("Hub Center").setPose(new Pose2d(vision.getHubCenter(), new Rotation2d()));
     }
 
     public Command getAutonomousCommand() {
