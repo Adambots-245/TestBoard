@@ -17,6 +17,7 @@ public class UptakeSubsystem extends SubsystemBase {
 
     public UptakeSubsystem(BaseMotor uptakeMotor) {
         this.uptakeMotor = uptakeMotor;
+        uptakeMotor.setInverted(true); // Set to true if motor is reversed
         uptakeMotor.setBrakeMode(true);
     }
 

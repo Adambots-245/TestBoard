@@ -79,7 +79,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
         turretMotor.configure()
             .pid(ShooterTestConstants.kTurretP, ShooterTestConstants.kTurretI,
-                 ShooterTestConstants.kTurretD, 0)
+                 ShooterTestConstants.kTurretD, ShooterTestConstants.kTurretFF)
             .brakeMode(true)   // hold position
             .currentLimits(ShooterTestConstants.kTurretStallCurrentLimit,
                            ShooterTestConstants.kTurretFreeCurrentLimit, 3000)
@@ -324,7 +324,7 @@ public class ShooterSubsystem extends SubsystemBase {
             double d = turretDEntry.getDouble(ShooterTestConstants.kTurretD);
 
             if (p != lastTurretP || i != lastTurretI || d != lastTurretD) {
-                turretMotor.setPID(0, p, i, d, 0);
+                turretMotor.setPID(0, p, i, d, ShooterTestConstants.kTurretFF);
                 lastTurretP = p;
                 lastTurretI = i;
                 lastTurretD = d;

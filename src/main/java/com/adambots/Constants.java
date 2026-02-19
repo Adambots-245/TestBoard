@@ -38,9 +38,10 @@ public final class Constants {
         public static final double kFlywheelFF = kNominalVoltage / kMotorFreeSpeedRPS;
 
         // ==================== Turret PID Defaults (from Adambots2026 simulation) ====================
-        public static final double kTurretP = 0.05;
+        public static final double kTurretP = 0.75;
         public static final double kTurretI = 0;
         public static final double kTurretD = 0;
+        public static final double kTurretFF = 0.2;
 
         // ==================== Turret Mechanical ====================
         // WCP GreyT Turret gear ratio (motor rotations per turret rotation)
@@ -49,7 +50,7 @@ public final class Constants {
         public static final double kTurretGearRatio = 200.0/18.0; //was 100.0, 20 was mechs estimate 
         //200 big wheel 18 small wheel 
         public static final double kTurretMinDegrees = 0.0;
-        public static final double kTurretMaxDegrees = 180.0;
+        public static final double kTurretMaxDegrees = 120.0;
 
         // Soft limit rotations derived from degrees/360 * gearRatio
         public static final double kTurretForwardLimit = (kTurretMaxDegrees / 360.0) * kTurretGearRatio;
@@ -70,7 +71,7 @@ public final class Constants {
         // place a ball in the shooter at the exit point. Measure from the
         // floor to the center of the ball. Record in meters.
         // Example: 18 inches = 0.4572 meters
-        public static final double kExitHeightMeters = 0.4445;
+        public static final double kExitHeightMeters = 0.48;
 
         // ==================== Flywheel Tolerance ====================
         public static final double kFlywheelToleranceRPS = 2.0;
@@ -78,11 +79,11 @@ public final class Constants {
         // ==================== Default Interpolation Table ====================
         // Starting guesses for distance (meters) -> RPS, will be tuned
         public static final double[][] kDefaultInterpolationTable = {
-            {1.0, 30.0},
             {2.0, 45.0},
-            {3.0, 55.0},
-            {4.0, 65.0},
-            {5.0, 75.0}
+            {2.5, 46.5},
+            {3.0, 48.0},
+            {4.0, 54.0},
+            {5.0, 60.0}
         };
 
         // ==================== Current Limits ====================
