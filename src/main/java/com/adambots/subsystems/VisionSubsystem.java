@@ -1,41 +1,35 @@
 package com.adambots.subsystems;
 
-import java.util.ArrayList;
-import java.util.List;
+import static edu.wpi.first.units.Units.*;
+
 import java.util.Optional;
 
-import org.photonvision.EstimatedRobotPose;
-import org.photonvision.PhotonCamera;
-import org.photonvision.PhotonPoseEstimator;
-import org.photonvision.PhotonPoseEstimator.PoseStrategy;
-import org.photonvision.simulation.PhotonCameraSim;
-import org.photonvision.simulation.VisionSystemSim;
-import org.photonvision.targeting.PhotonPipelineResult;
-import org.photonvision.targeting.PhotonTrackedTarget;
-
 import com.adambots.Constants.VisionConstants;
-import com.adambots.Robot;
 import com.adambots.lib.utils.Utils;
+import com.adambots.lib.vision.PhotonVision;
+import com.adambots.lib.vision.VisionCameraInterface;
+import com.adambots.lib.vision.VisionResult;
+import com.adambots.lib.vision.VisionTarget;
+import com.adambots.lib.vision.config.VisionCameraConfig.CameraPurpose;
+import com.adambots.lib.vision.config.VisionConfigBuilder;
+import com.adambots.lib.vision.config.VisionSystemConfig;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 /**
- * Vision subsystem using PhotonVision for AprilTag-based distance and angle estimation.
+ * Vision subsystem using AdambotsLib's PhotonVision for AprilTag-based distance and angle estimation.
  * Implements two approaches side-by-side:
- *   A: Camera-Only (direct tag geometry)
- *   B: Pose-Based (PhotonPoseEstimator)
+ *   A: Camera-Only (direct tag geometry — local code, not in lib)
+ *   B: Pose-Based (via lib's PhotonVision class)
  */
 public class VisionSubsystem extends SubsystemBase {
 
-    private final PhotonCamera camera;
-    private final AprilTagFieldLayout fieldLayout;
-    private final PhotonPoseEstimator poseEstimator;
+    private final PhotonVision photonVision;
 
     // Approach A outputs (camera-only)
     private double camDistanceMeters = 0;
@@ -55,122 +49,119 @@ public class VisionSubsystem extends SubsystemBase {
     private final Translation2d blueHubCenter;
     private final Translation2d redHubCenter;
 
-    // Simulation support (only initialized when running in sim)
-    private VisionSystemSim visionSim;
-    private PhotonCameraSim cameraSim;
+    // Sim pose stored from simulationPeriodic(), passed to lib's updatePoseEstimation()
+    private Pose2d simPose;
 
-    public VisionSubsystem() {
-        camera = new PhotonCamera(VisionConstants.kCameraName);
+    public VisionSubsystem(Field2d field) {
+        VisionSystemConfig config = VisionConfigBuilder.create()
+            .addCamera(VisionConstants.kCameraName)
+                .position(
+                    Meters.of(VisionConstants.kCameraForwardOffsetMeters),
+                    Meters.of(0),
+                    Meters.of(VisionConstants.kCameraHeightMeters))
+                .rotation(
+                    Degrees.of(0),
+                    Degrees.of(Math.toDegrees(VisionConstants.kCameraPitchRadians)),
+                    Degrees.of(0))
+                .purpose(CameraPurpose.BOTH)
+                .done()
+            .ambiguityThreshold(VisionConstants.kMaxAmbiguity)
+            .build();
 
-        fieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
+        photonVision = new PhotonVision(config, () -> estimatedPose, field);
 
-        poseEstimator = new PhotonPoseEstimator(
-            fieldLayout,
-            PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-            VisionConstants.kRobotToCamera);
-        poseEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
-
-        blueHubCenter = computeHubCenter(VisionConstants.kBlueHubTagIds);
-        redHubCenter = computeHubCenter(VisionConstants.kRedHubTagIds);
-
-        if (Robot.isSimulation()) {
-            simulationInit();
-        }
-    }
-
-    private void simulationInit() {
-        visionSim = new VisionSystemSim("main");
-        visionSim.addAprilTags(fieldLayout);
-        cameraSim = new PhotonCameraSim(camera);
-        visionSim.addCamera(cameraSim, VisionConstants.kRobotToCamera);
+        // Precompute hub centers using lib method
+        blueHubCenter = photonVision.getTagGroupCenter(VisionConstants.kBlueHubTagIds);
+        redHubCenter = photonVision.getTagGroupCenter(VisionConstants.kRedHubTagIds);
     }
 
     public void simulationPeriodic(Pose2d simPose) {
-        visionSim.update(simPose);
-    }
-
-    /**
-     * Computes the average XY position of all tags in the given ID set.
-     */
-    private Translation2d computeHubCenter(int[] tagIds) {
-        double x = 0, y = 0;
-        int count = 0;
-        for (int id : tagIds) {
-            Optional<Pose3d> pose = fieldLayout.getTagPose(id);
-            if (pose.isPresent()) {
-                x += pose.get().getX();
-                y += pose.get().getY();
-                count++;
-            }
-        }
-        if (count == 0) return new Translation2d();
-        return new Translation2d(x / count, y / count);
+        this.simPose = simPose;
     }
 
     @Override
     public void periodic() {
-        List<PhotonPipelineResult> results = camera.getAllUnreadResults();
-        if (results.isEmpty()) return;
+        // Approach B: lib handles pose estimation + sim update
+        photonVision.updatePoseEstimation(
+            (pose, timestamp, stdDevs) -> { this.estimatedPose = pose; },
+            () -> Optional.ofNullable(simPose)
+        );
 
-        // Use the most recent result
-        PhotonPipelineResult result = results.get(results.size() - 1);
+        // The lib's sim camera runs at 30 FPS (~33ms) while the robot loop is 20ms.
+        // On cycles where no new camera frame is available, the lib's result cache is empty.
+        // Keep previous values (matching the old code's "if (results.isEmpty()) return;").
+        VisionCameraInterface cam = photonVision.getCamera(VisionConstants.kCameraName);
+        if (cam.getLatestResult().isEmpty()) return;
 
         // Determine alliance and hub center
         boolean isRed = Utils.isOnRedAlliance();
         Translation2d hubCenter = isRed ? redHubCenter : blueHubCenter;
         int[] hubTagIds = isRed ? VisionConstants.kRedHubTagIds : VisionConstants.kBlueHubTagIds;
 
-        // Filter targets: keep hub tags with low ambiguity
-        List<PhotonTrackedTarget> validTargets = new ArrayList<>();
-        for (PhotonTrackedTarget target : result.getTargets()) {
-            if (target.getPoseAmbiguity() > VisionConstants.kMaxAmbiguity) continue;
-            int fid = target.getFiducialId();
-            for (int hubId : hubTagIds) {
-                if (fid == hubId) {
-                    validTargets.add(target);
-                    break;
-                }
-            }
-        }
-
-        visibleTagCount = validTargets.size();
+        // Tag count via lib
+        visibleTagCount = photonVision.getVisibleTagCount(hubTagIds, VisionConstants.kMaxAmbiguity);
 
         // ==================== Approach A: Camera-Only ====================
-        updateCameraOnly(validTargets, hubCenter);
+        updateCameraOnly(hubCenter, hubTagIds);
 
         // ==================== Approach B: Pose-Based ====================
-        updatePoseBased(result, hubCenter);
+        if (visibleTagCount > 0 && estimatedPose.getTranslation().getNorm() > 0) {
+            poseDistanceMeters = photonVision.getDistanceToPoint(hubCenter);
+            poseAngleDegrees = photonVision.getYawToPoint(hubCenter).getDegrees();
+            poseHasTarget = poseDistanceMeters <= VisionConstants.kMaxDistanceMeters;
+        } else {
+            poseHasTarget = false;
+        }
     }
 
     /**
      * Approach A: Compute camera field pose from individual tag transforms,
      * then derive distance and angle to hub center.
+     * This stays as local code — the lib doesn't have this camera-only pattern.
      */
-    private void updateCameraOnly(List<PhotonTrackedTarget> validTargets, Translation2d hubCenter) {
-        if (validTargets.isEmpty()) {
+    private void updateCameraOnly(Translation2d hubCenter, int[] hubTagIds) {
+        VisionCameraInterface cam = photonVision.getCamera(VisionConstants.kCameraName);
+        Optional<? extends VisionResult> resultOpt = cam.getLatestResult();
+
+        if (resultOpt.isEmpty() || !resultOpt.get().hasTargets()) {
             camHasTarget = false;
             return;
         }
 
-        // We'll average the camera's field position across all visible tags.
+        VisionResult result = resultOpt.get();
+
+        // We'll average the camera's field position across all visible hub tags.
         // Each tag gives us an independent estimate of where the camera is on the field.
-        double sumX = 0, sumY = 0, sumHeading = 0;
+        double sumX = 0, sumY = 0;
+        // Use circular mean for heading (cos/sin averaging) to avoid ±180° wraparound bug.
+        // Arithmetic mean of +179° and -179° gives 0° (wrong); circular mean gives 180° (correct).
+        double sumCos = 0, sumSin = 0;
         int count = 0;
 
-        for (PhotonTrackedTarget target : validTargets) {
-            // Look up this tag's known position on the field (from the field layout JSON)
-            Optional<Pose3d> tagPose3d = fieldLayout.getTagPose(target.getFiducialId());
+        for (VisionTarget target : result.getTargets()) {
+            if (target.getPoseAmbiguity() > VisionConstants.kMaxAmbiguity) continue;
+
+            // Filter: only process hub tags for this alliance
+            boolean isHubTag = false;
+            for (int hubId : hubTagIds) {
+                if (target.getFiducialId() == hubId) { isHubTag = true; break; }
+            }
+            if (!isHubTag) continue;
+
+            // Look up this tag's known position on the field
+            Optional<Pose3d> tagPose3d = PhotonVision.fieldLayout.getTagPose(target.getFiducialId());
             if (tagPose3d.isEmpty()) continue;
 
             // PhotonVision gives us the transform FROM camera TO the tag.
             // Inverting it and applying to the tag's field pose gives us the camera's field pose.
-            // tagFieldPose + inverse(camToTag) = cameraFieldPose
             Transform3d camToTag = target.getBestCameraToTarget();
             Pose3d cameraPose3d = tagPose3d.get().transformBy(camToTag.inverse());
 
             sumX += cameraPose3d.getX();
             sumY += cameraPose3d.getY();
-            sumHeading += cameraPose3d.getRotation().toRotation2d().getRadians();
+            double heading = cameraPose3d.getRotation().toRotation2d().getRadians();
+            sumCos += Math.cos(heading);
+            sumSin += Math.sin(heading);
             count++;
         }
 
@@ -182,55 +173,17 @@ public class VisionSubsystem extends SubsystemBase {
         // Average all tag-derived camera poses for a more stable estimate
         double camX = sumX / count;
         double camY = sumY / count;
-        double camHeading = sumHeading / count;
+        double camHeading = Math.atan2(sumSin / count, sumCos / count);
 
         // Straight-line distance from camera position to hub center on the field
         Translation2d camPosition = new Translation2d(camX, camY);
         camDistanceMeters = camPosition.getDistance(hubCenter);
 
-        // Compute the direction the turret needs to rotate:
-        // angleToHub = absolute field angle from camera to hub center (atan2)
-        // Subtracting the camera's heading gives the relative angle the turret must turn.
-        // Positive = hub is to the right of where the camera is facing.
+        // Compute the direction the turret needs to rotate
         double angleToHub = Math.atan2(hubCenter.getY() - camY, hubCenter.getX() - camX);
         camAngleDegrees = Utils.wrapAngleDeg(Math.toDegrees(angleToHub - camHeading));
 
         camHasTarget = camDistanceMeters <= VisionConstants.kMaxDistanceMeters;
-    }
-
-    /**
-     * Approach B: Use PhotonPoseEstimator to get field pose,
-     * then compute distance and angle to hub center.
-     */
-    private void updatePoseBased(PhotonPipelineResult result, Translation2d hubCenter) {
-        // PhotonPoseEstimator fuses all visible tags (multi-tag PnP) to estimate
-        // the robot's full field pose. This is the same pipeline a real robot would use.
-        Optional<EstimatedRobotPose> estimatedOpt = poseEstimator.update(result);
-
-        if (estimatedOpt.isEmpty()) {
-            poseHasTarget = false;
-            return;
-        }
-
-        // Convert the 3D pose estimate to 2D (we only need X, Y, and heading)
-        EstimatedRobotPose estimated = estimatedOpt.get();
-        estimatedPose = estimated.estimatedPose.toPose2d();
-
-        // Straight-line distance from estimated robot position to hub center
-        poseDistanceMeters = estimatedPose.getTranslation().getDistance(hubCenter);
-
-        // Compute the absolute turret angle needed to aim at the hub:
-        // angleToHub = absolute field angle from robot to hub center
-        // Subtracting the robot's heading gives the turret angle relative to the robot's front.
-        // Unlike Approach A (relative offset), this is an absolute turret setpoint —
-        // the turret should go directly to this angle.
-        double angleToHub = Math.atan2(
-            hubCenter.getY() - estimatedPose.getY(),
-            hubCenter.getX() - estimatedPose.getX());
-        poseAngleDegrees = Utils.wrapAngleDeg(
-            Math.toDegrees(angleToHub - estimatedPose.getRotation().getRadians()));
-
-        poseHasTarget = poseDistanceMeters <= VisionConstants.kMaxDistanceMeters;
     }
 
     // ==================== Approach A Getters ====================

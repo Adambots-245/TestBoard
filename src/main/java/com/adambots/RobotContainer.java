@@ -55,7 +55,8 @@ public class RobotContainer {
         // Initialize subsystems with motors from RobotMap
         shooter = new ShooterSubsystem(RobotMap.shooterLeftMotor, RobotMap.shooterRightMotor, RobotMap.turretMotor);
         uptake = new UptakeSubsystem(RobotMap.uptakeMotor);
-        vision = new VisionSubsystem();
+        field = new Field2d();
+        vision = new VisionSubsystem(field);
 
         // Setup Shuffleboard tabs with commands
         setupDashboard();
@@ -259,9 +260,11 @@ public class RobotContainer {
             pos[0], pos[1]);
         advance(pos, cols);
 
-        // --- Row 3: Sim Tunables (only meaningful in simulation) ---
+        // --- Sim Tunables (only meaningful in simulation) ---
+        // Skip an extra row — command buttons above default to 2 rows tall in Shuffleboard
         if (Robot.isSimulation()) {
             newRow(pos);
+            pos[1]++;
             simXEntry = Dash.addTunable("Sim X (m)", 14.0, pos[0], pos[1]);
             advance(pos, cols);
             simYEntry = Dash.addTunable("Sim Y (m)", 4.0, pos[0], pos[1]);
@@ -274,7 +277,6 @@ public class RobotContainer {
             advance(pos, cols);
 
             // Field2d visualization — hub center is updated each cycle in simulationPeriodic()
-            field = new Field2d();
             SmartDashboard.putData("Field", field);
 
             // Pose3d publisher for hub center in AdvantageScope 3D
