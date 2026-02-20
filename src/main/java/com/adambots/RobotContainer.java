@@ -3,17 +3,24 @@ package com.adambots;
 import static edu.wpi.first.units.Units.*;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.GenericEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 
+import org.ironmaple.simulation.SimulatedArena;
+
 import com.adambots.commands.ShootCommand;
 import com.adambots.lib.utils.Dash;
 import com.adambots.lib.utils.Utils;
+import com.adambots.simulation.FuelProjectile;
 import com.adambots.subsystems.ShooterSubsystem;
 import com.adambots.subsystems.UptakeSubsystem;
 import com.adambots.subsystems.VisionSubsystem;
@@ -42,6 +49,7 @@ public class RobotContainer {
     private GenericEntry simYEntry;
     private GenericEntry simHeadingEntry;
     private Field2d field;
+    private StructPublisher<Pose3d> hubCenterPublisher;
 
     public RobotContainer() {
         // Initialize subsystems with motors from RobotMap
@@ -268,6 +276,59 @@ public class RobotContainer {
             // Field2d visualization — hub center is updated each cycle in simulationPeriodic()
             field = new Field2d();
             SmartDashboard.putData("Field", field);
+
+            // Pose3d publisher for hub center in AdvantageScope 3D
+            hubCenterPublisher = NetworkTableInstance.getDefault()
+                .getTable("Shooter").getStructTopic("HubCenter", Pose3d.struct).publish();
+
+            // --- Sim Shoot Commands ---
+            newRow(pos);
+
+            // Table: vision distance → table RPS → exit velocity → launch
+            Dash.addCommand("Sim Shoot (Table)",
+                Commands.runOnce(() -> {
+                    Pose2d simPose = getSimPose();
+                    Translation2d hub = vision.getHubCenter();
+                    double distance = simPose.getTranslation().getDistance(hub);
+                    double rps = shooter.getRPSFromTable(distance);
+                    double velocity = FuelProjectile.calculateExitVelocity(rps);
+                    Rotation2d shootDir = simPose.getRotation()
+                        .plus(Rotation2d.fromDegrees(shooter.getTurretAngleDegrees()));
+                    FuelProjectile.launch(simPose, shootDir, velocity, hub);
+                }).ignoringDisable(true).withName("Sim Shoot (Table)"),
+                pos[0], pos[1]);
+            advance(pos, cols);
+
+            // Custom: use current flywheel RPS (or target if not spinning)
+            Dash.addCommand("Sim Shoot (Custom)",
+                Commands.runOnce(() -> {
+                    Pose2d simPose = getSimPose();
+                    Translation2d hub = vision.getHubCenter();
+                    double rps = Math.abs(shooter.getLeftRPS());
+                    if (rps < 1.0) rps = shooter.getTargetRPS();
+                    double velocity = FuelProjectile.calculateExitVelocity(rps);
+                    Rotation2d shootDir = simPose.getRotation()
+                        .plus(Rotation2d.fromDegrees(shooter.getTurretAngleDegrees()));
+                    FuelProjectile.launch(simPose, shootDir, velocity, hub);
+                }).ignoringDisable(true).withName("Sim Shoot (Custom)"),
+                pos[0], pos[1]);
+            advance(pos, cols);
+
+            // Aim+Shoot: table RPS with perfect aim at hub (bypasses turret angle)
+            Dash.addCommand("Sim Shoot (Aim+Shoot)",
+                Commands.runOnce(() -> {
+                    Pose2d simPose = getSimPose();
+                    Translation2d hub = vision.getHubCenter();
+                    double distance = simPose.getTranslation().getDistance(hub);
+                    double rps = shooter.getRPSFromTable(distance);
+                    double velocity = FuelProjectile.calculateExitVelocity(rps);
+                    double angleToHub = Math.atan2(
+                        hub.getY() - simPose.getY(),
+                        hub.getX() - simPose.getX());
+                    FuelProjectile.launch(simPose, new Rotation2d(angleToHub), velocity, hub);
+                }).ignoringDisable(true).withName("Sim Shoot (Aim+Shoot)"),
+                pos[0], pos[1]);
+            advance(pos, cols);
         }
     }
 
@@ -320,6 +381,9 @@ public class RobotContainer {
         vision.simulationPeriodic(simPose);
         field.setRobotPose(simPose);
         field.getObject("Hub Center").setPose(new Pose2d(vision.getHubCenter(), new Rotation2d()));
+        Translation2d hub = vision.getHubCenter();
+        hubCenterPublisher.set(new Pose3d(hub.getX(), hub.getY(), Constants.ShooterTestConstants.kHubHeightMeters, new Rotation3d()));
+        SimulatedArena.getInstance().simulationPeriodic();
     }
 
     public Command getAutonomousCommand() {
