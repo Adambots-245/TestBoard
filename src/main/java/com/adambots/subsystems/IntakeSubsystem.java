@@ -8,6 +8,7 @@ import com.adambots.Constants.IntakeConstants;
 import com.adambots.Constants.SimConstants;
 import com.adambots.Robot;
 import com.adambots.lib.actuators.BaseMotor;
+import com.adambots.lib.actuators.MinionMotor;
 import com.adambots.lib.utils.Dash;
 
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -66,6 +67,7 @@ public class IntakeSubsystem extends SubsystemBase {
         configureMotors();
         setupDash();
         configureLimitSwitch();
+        intakeArmMotor.setPosition(0);
 
         if (Robot.isSimulation()) {
             setupSimulation();
@@ -423,7 +425,7 @@ public class IntakeSubsystem extends SubsystemBase {
     public void periodic() {
         // No PID loop here - the motor controller handles everything at 1kHz.
         // We only check for tunable gain updates from Shuffleboard.
-
+        
         if (intakeArmPEntry != null) {
             double p = intakeArmPEntry.getDouble(IntakeConstants.kArmP);
             double i = intakeArmIEntry.getDouble(IntakeConstants.kArmI);
@@ -432,11 +434,13 @@ public class IntakeSubsystem extends SubsystemBase {
             double kS = intakeArmKSEntry.getDouble(IntakeConstants.kArmKS);
             double kV = intakeArmKVEntry.getDouble(IntakeConstants.kArmKV);
             double kA = intakeArmKAEntry.getDouble(IntakeConstants.kArmKA);
+            System.out.println("Current kG:" + kG);
 
             if (p != lastP || i != lastI || d != lastD ||
                 kG != lastKG || kS != lastKS || kV != lastKV || kA != lastKA) {
 
                 intakeArmMotor.setPID(0, p, i, d, kV, kS, kA, kG);
+                System.out.println("Setting PID");
                 intakeArmMotor.configureGravity(BaseMotor.GravityType.ARM_COSINE);
 
                 lastP = p;

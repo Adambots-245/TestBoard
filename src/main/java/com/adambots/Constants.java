@@ -66,8 +66,8 @@ public final class Constants {
         // Stage 2: Belt-driven pulley from gearbox output to arm pivot
         // Total ratio = stage1 * stage2 (motor rotations per mechanism rotation)
         // TODO: Get actual values from mech team
-        public static final double kArmPlanetaryRatio = 1.0;  // e.g., 5.0 for 5:1 planetary
-        public static final double kArmBeltRatio = 1.0;        // e.g., 2.0 for 36T:18T belt
+        public static final double kArmPlanetaryRatio = 20.0;  // e.g., 5.0 for 5:1 planetary
+        public static final double kArmBeltRatio = 1.4;        // e.g., 2.0 for 36T:18T belt
         public static final double kArmTotalGearRatio = kArmPlanetaryRatio * kArmBeltRatio;
 
         public static final double kLowSpeed = 0.3;
