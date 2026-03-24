@@ -35,6 +35,17 @@ public final class Constants {
         public static final Current kCarouselCurrentLimit = Amps.of(40);
     }
 
+    /**
+     * Encoder test constants for FXS + ThroughBore encoder validation.
+     */
+    public static final class EncoderTestConstants {
+        public static final double kDefaultSensorRatio = 1.0;
+        public static final double kDefaultOffset = 0.0;
+        public static final double kDefaultDiscontinuity = 1.0;
+        public static final double kOpenLoopSpeed = 0.3;
+        public static final double kCurrentLimit = 30.0;
+    }
+
     // ==================== Add Your Constants Here ====================
     // Example:
     // public static final class IntakeConstants {

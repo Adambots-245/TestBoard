@@ -22,6 +22,8 @@ Thumbs.db
 
 # Simulation
 simgui*.json
+ctre_sim/
+networktables.json
 
 # Logs
 *.log

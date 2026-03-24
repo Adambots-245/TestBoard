@@ -1,7 +1,7 @@
 package com.adambots;
 
 import com.adambots.lib.actuators.BaseMotor;
-import com.adambots.lib.actuators.TalonFXMotor;
+import com.adambots.lib.actuators.MinionMotor;
 
 /**
  * RobotMap defines all hardware port assignments and motor instances for TestBoard.
@@ -19,34 +19,7 @@ import com.adambots.lib.actuators.TalonFXMotor;
  */
 public class RobotMap {
 
-    // ==================== CAN IDs ====================
-    // Shooter Prototype
-    public static final int kShooterLeftPort = 21;   // Kraken X60
-    public static final int kShooterRightPort = 22;  // Kraken X60 (follower)
-    public static final int kUptakePort = 20;        // Kraken X44
-    public static final int kCarouselPort = 23;      // Kraken X44
-
-    // ==================== Motor Instances ====================
-    // Using BaseMotor allows easy swap between motor types (TalonFX, NEO, etc.)
-    // TalonFXMotor(portNum, isOnCANivore, supplyCurrentLimit, isKraken)
-
-    // Shooter motors (Kraken X60)
-    public static final BaseMotor shooterLeftMotor = new TalonFXMotor(kShooterLeftPort, false, 60.0, true);
-    public static final BaseMotor shooterRightMotor = new TalonFXMotor(kShooterRightPort, false, 60.0, true);
-
-    // Hopper/Uptake motor (Kraken X44)
-    public static final BaseMotor uptakeMotor = new TalonFXMotor(kUptakePort, false, 40.0, true);
-
-    // Carousel motor (Kraken X44)
-    public static final BaseMotor carouselMotor = new TalonFXMotor(kCarouselPort, false, 40.0, true);
-
-    // ==================== Add Your Motors Here ====================
-    // Example:
-    // public static final int kIntakePort = 10;
-    // public static final BaseMotor intakeMotor = new TalonFXMotor(kIntakePort);
-    //
-    // public static final int kArmLeftPort = 30;
-    // public static final int kArmRightPort = 31;
-    // public static final BaseMotor armLeftMotor = new TalonFXMotor(kArmLeftPort);
-    // public static final BaseMotor armRightMotor = new TalonFXMotor(kArmRightPort);
+    // Encoder Test (MinionMotor / TalonFXS with ThroughBore on data port)
+    public static final int kEncoderTestPort = 30;
+    public static final BaseMotor encoderTestMotor = new MinionMotor(kEncoderTestPort);
 }

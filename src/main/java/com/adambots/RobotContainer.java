@@ -5,9 +5,10 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 
-import com.adambots.commands.ShootCommand;
-import com.adambots.subsystems.HopperSubsystem;
-import com.adambots.subsystems.ShooterSubsystem;
+import com.adambots.Constants.EncoderTestConstants;
+import com.adambots.subsystems.EncoderTestSubsystem;
+
+import edu.wpi.first.networktables.GenericEntry;
 
 /**
  * RobotContainer for TestBoard - a subsystem testing platform.
@@ -24,21 +25,16 @@ import com.adambots.subsystems.ShooterSubsystem;
 public class RobotContainer {
 
     // ==================== Subsystems ====================
-    private final ShooterSubsystem shooter;
-    private final HopperSubsystem hopper;
+    private final EncoderTestSubsystem encoderTest;
 
-    // Add your subsystems here:
-    // private final IntakeSubsystem intake;
-    // private final ArmSubsystem arm;
+    // Encoder test tunables
+    private GenericEntry sensorRatioEntry;
+    private GenericEntry offsetEntry;
+    private GenericEntry discontinuityEntry;
+    private GenericEntry openLoopSpeedEntry;
 
     public RobotContainer() {
-        // Initialize subsystems with motors from RobotMap
-        shooter = new ShooterSubsystem(RobotMap.shooterLeftMotor, RobotMap.shooterRightMotor);
-        hopper = new HopperSubsystem(RobotMap.uptakeMotor, RobotMap.carouselMotor);
-
-        // Add your subsystem initialization here:
-        // intake = new IntakeSubsystem(RobotMap.intakeMotor);
-        // arm = new ArmSubsystem(RobotMap.armLeftMotor, RobotMap.armRightMotor);
+        encoderTest = new EncoderTestSubsystem(RobotMap.encoderTestMotor);
 
         // Setup Shuffleboard tabs with commands
         setupDashboard();
@@ -49,84 +45,45 @@ public class RobotContainer {
      * Tabs persist between runs - just rearrange widgets as needed.
      */
     private void setupDashboard() {
-        // ==================== Shooter Tab ====================
-        ShuffleboardTab shooterTab = Shuffleboard.getTab("Shooter");
+        // ==================== Encoder Test Tab ====================
+        ShuffleboardTab encTab = Shuffleboard.getTab("Encoder Test");
 
-        // Shooter wheel commands (row 0)
-        shooterTab.add("Run Shooter", shooter.runShooterCommand())
-            .withPosition(0, 0).withSize(2, 1);
-        shooterTab.add("Stop Shooter", shooter.stopShooterCommand())
-            .withPosition(2, 0).withSize(2, 1);
-        shooterTab.add("Reverse Shooter", shooter.reverseShooterCommand())
-            .withPosition(4, 0).withSize(2, 1);
+        // Row 0: Tunables
+        sensorRatioEntry = encTab.add("Sensor Ratio", EncoderTestConstants.kDefaultSensorRatio)
+            .withPosition(0, 0).withSize(2, 1).getEntry();
+        offsetEntry = encTab.add("Offset (rot)", EncoderTestConstants.kDefaultOffset)
+            .withPosition(2, 0).withSize(2, 1).getEntry();
+        discontinuityEntry = encTab.add("Discontinuity", EncoderTestConstants.kDefaultDiscontinuity)
+            .withPosition(4, 0).withSize(2, 1).getEntry();
+        openLoopSpeedEntry = encTab.add("Open Loop Speed", EncoderTestConstants.kOpenLoopSpeed)
+            .withPosition(6, 0).withSize(2, 1).getEntry();
 
-        // RPM telemetry (row 1)
-        shooterTab.addNumber("Left RPM", shooter::getLeftRPM)
+        // Row 1: Telemetry
+        encTab.addNumber("Position (rot)", encoderTest::getPosition)
             .withPosition(0, 1).withSize(2, 1);
-        shooterTab.addNumber("Right RPM", shooter::getRightRPM)
+        encTab.addNumber("Velocity (RPS)", encoderTest::getVelocityRPS)
             .withPosition(2, 1).withSize(2, 1);
-
-        // Subsystem status (row 2)
-        shooterTab.add("Shooter Subsystem", shooter)
-            .withPosition(0, 2).withSize(3, 2);
-
-        // ==================== Hopper Tab ====================
-        ShuffleboardTab hopperTab = Shuffleboard.getTab("Hopper");
-
-        // Uptake commands (row 0)
-        hopperTab.add("Run Uptake", hopper.runUptakeCommand())
-            .withPosition(0, 0).withSize(2, 1);
-        hopperTab.add("Stop Uptake", hopper.stopUptakeCommand())
-            .withPosition(2, 0).withSize(2, 1);
-        hopperTab.add("Reverse Uptake", hopper.reverseUptakeCommand())
-            .withPosition(4, 0).withSize(2, 1);
-
-        // Carousel commands (row 1)
-        hopperTab.add("Run Carousel", hopper.runCarouselCommand())
-            .withPosition(0, 1).withSize(2, 1);
-        hopperTab.add("Stop Carousel", hopper.stopCarouselCommand())
-            .withPosition(2, 1).withSize(2, 1);
-        hopperTab.add("Reverse Carousel", hopper.reverseCarouselCommand())
+        encTab.addNumber("Duty Cycle", encoderTest::getDutyCycle)
             .withPosition(4, 1).withSize(2, 1);
+        encTab.addNumber("Current (A)", encoderTest::getCurrentAmps)
+            .withPosition(6, 1).withSize(2, 1);
 
-        // Combined hopper commands (row 2)
-        hopperTab.add("Run Hopper", hopper.runHopperCommand())
+        // Row 2: Commands
+        encTab.add("Run Forward", encoderTest.runForwardCommand())
             .withPosition(0, 2).withSize(2, 1);
-        hopperTab.add("Stop Hopper", hopper.stopHopperCommand())
+        encTab.add("Run Reverse", encoderTest.runReverseCommand())
             .withPosition(2, 2).withSize(2, 1);
-        hopperTab.add("Reverse Hopper", hopper.reverseHopperCommand())
+        encTab.add("Stop", encoderTest.stopCommand())
             .withPosition(4, 2).withSize(2, 1);
-
-        // RPM telemetry (row 3)
-        hopperTab.addNumber("Uptake RPM", hopper::getUptakeRPM)
-            .withPosition(0, 3).withSize(2, 1);
-        hopperTab.addNumber("Carousel RPM", hopper::getCarouselRPM)
-            .withPosition(2, 3).withSize(2, 1);
-
-        // Subsystem status (row 4)
-        hopperTab.add("Hopper Subsystem", hopper)
-            .withPosition(0, 4).withSize(3, 2);
-
-        // ==================== Combo Tab ====================
-        ShuffleboardTab comboTab = Shuffleboard.getTab("Combo");
-
-        // Combined commands (row 0)
-        comboTab.add("Shoot With Hopper", ShootCommand.shootWithHopper(shooter, hopper))
-            .withPosition(0, 0).withSize(2, 1);
-        comboTab.add("Stop All", ShootCommand.stopAll(shooter, hopper))
-            .withPosition(2, 0).withSize(2, 1);
-        comboTab.add("Reverse All", ShootCommand.reverseAll(shooter, hopper))
-            .withPosition(4, 0).withSize(2, 1);
-
-        // ==================== Add Your Subsystem Tabs Here ====================
-        // Example:
-        // ShuffleboardTab intakeTab = Shuffleboard.getTab("Intake");
-        // intakeTab.add("Run Intake", intake.runIntakeCommand())
-        //     .withPosition(0, 0).withSize(2, 1);
-        // intakeTab.add("Stop Intake", intake.stopIntakeCommand())
-        //     .withPosition(2, 0).withSize(2, 1);
-        // intakeTab.add("Intake Subsystem", intake)
-        //     .withPosition(0, 1).withSize(3, 2);
+        encTab.add("Apply Config", Commands.runOnce(() -> {
+            encoderTest.applyConfig(
+                sensorRatioEntry.getDouble(EncoderTestConstants.kDefaultSensorRatio),
+                offsetEntry.getDouble(EncoderTestConstants.kDefaultOffset),
+                discontinuityEntry.getDouble(EncoderTestConstants.kDefaultDiscontinuity));
+            encoderTest.setOpenLoopSpeed(
+                openLoopSpeedEntry.getDouble(EncoderTestConstants.kOpenLoopSpeed));
+        }).ignoringDisable(true).withName("Apply Config"))
+            .withPosition(6, 2).withSize(2, 1);
     }
 
     /**

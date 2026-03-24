@@ -3,7 +3,6 @@ package com.adambots.subsystems;
 import static edu.wpi.first.units.Units.RPM;
 
 import com.adambots.Constants.ShooterConstants;
-import com.adambots.RobotMap;
 import com.adambots.lib.actuators.BaseMotor;
 
 import edu.wpi.first.wpilibj2.command.Command;
@@ -16,10 +15,12 @@ public class ShooterSubsystem extends SubsystemBase {
 
     private final BaseMotor leftMotor;
     private final BaseMotor rightMotor;
+    private final int leftMotorPort;
 
-    public ShooterSubsystem(BaseMotor leftMotor, BaseMotor rightMotor) {
+    public ShooterSubsystem(BaseMotor leftMotor, BaseMotor rightMotor, int leftMotorPort) {
         this.leftMotor = leftMotor;
         this.rightMotor = rightMotor;
+        this.leftMotorPort = leftMotorPort;
         configureMotors();
     }
 
@@ -28,7 +29,7 @@ public class ShooterSubsystem extends SubsystemBase {
         rightMotor.setBrakeMode(false);
 
         // Right motor follows left motor in opposite direction (for shooter wheels)
-        rightMotor.setStrictFollower(RobotMap.kShooterLeftPort,true);
+        rightMotor.setStrictFollower(leftMotorPort, true);
     }
 
     /**
