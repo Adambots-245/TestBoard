@@ -59,14 +59,16 @@ public class RobotContainer {
             .withPosition(6, 0).withSize(2, 1).getEntry();
 
         // Row 1: Telemetry
-        encTab.addNumber("Position (rot)", encoderTest::getPosition)
+        encTab.addNumber("Ext Position (rot)", encoderTest::getPosition)
             .withPosition(0, 1).withSize(2, 1);
-        encTab.addNumber("Velocity (RPS)", encoderTest::getVelocityRPS)
+        encTab.addNumber("Rotor Position (rot)", encoderTest::getRotorPosition)
             .withPosition(2, 1).withSize(2, 1);
-        encTab.addNumber("Duty Cycle", encoderTest::getDutyCycle)
+        encTab.addNumber("Velocity (RPS)", encoderTest::getVelocityRPS)
             .withPosition(4, 1).withSize(2, 1);
-        encTab.addNumber("Current (A)", encoderTest::getCurrentAmps)
+        encTab.addNumber("Duty Cycle", encoderTest::getDutyCycle)
             .withPosition(6, 1).withSize(2, 1);
+        encTab.addNumber("Current (A)", encoderTest::getCurrentAmps)
+            .withPosition(8, 1).withSize(2, 1);
 
         // Row 2: Commands
         encTab.add("Run Forward", encoderTest.runForwardCommand())

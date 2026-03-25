@@ -63,6 +63,10 @@ public class EncoderTestSubsystem extends SubsystemBase {
         return motor.getPosition();
     }
 
+    public double getRotorPosition() {
+        return motor.getRotorPosition();
+    }
+
     public double getVelocityRPS() {
         return motor.getVelocity().in(RotationsPerSecond);
     }
